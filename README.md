@@ -7,4 +7,4 @@ notes, and some bibliography entries are marked unverified in `refs.bib`. The ma
 results it describes live in [sigilante/lean-pokemon](https://github.com/sigilante/lean-pokemon);
 where the two disagree, the Lean source is authoritative.
 
-Build: `latexmk -pdf mss.tex`.
+Build: `latexmk -pdf mss.tex`. A compiled `mss.pdf` is kept in the repository and rebuilt with each change to the source.
