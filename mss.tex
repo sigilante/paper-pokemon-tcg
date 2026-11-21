@@ -1,0 +1,928 @@
+% mss.tex -- living draft.
+% Evidence: ../PLAN.md, ../survey/S0--S6, ../data/README.md, and lean-pokemon (branch master,
+% commit 9465880). Every claim below should trace to one of these. When results arrive,
+% update Table 1 (status of claims) first, then the section concerned, and add a line to the
+% revision log below. Lean statements are copied verbatim from the source; do not edit them
+% by hand -- re-copy them.
+%
+% Revision log
+%   2026-11-21  first draft (statements as of lean-pokemon 9465880).
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage{hyperref}
+
+\newcommand{\pkmn}{Pok\'emon}
+\newcommand{\lean}[1]{\texttt{#1}}
+\newcommand{\todo}[1]{\textcolor{red!70!black}{[\textsc{todo}: #1]}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\lstdefinelanguage{lean4}{
+  morekeywords={theorem,def,inductive,structure,where,deriving,namespace,end,fun,let,
+    import,Prop,Type,Nat,Bool,List,Option,some,none},
+  sensitive=true,
+  morecomment=[l]{--},
+  morecomment=[s]{/-}{-/},
+  morestring=[b]",
+}
+\lstset{
+  language=lean4,
+  basicstyle=\ttfamily\upshape\small,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\color{black!60},
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  aboveskip=0.8em,
+  belowskip=0.8em,
+  literate=
+    {→}{{$\to$}}1
+    {∀}{{$\forall$}}1
+    {∃}{{$\exists$}}1
+    {∧}{{$\wedge$}}1
+    {∨}{{$\vee$}}1
+    {≤}{{$\le$}}1
+    {≠}{{$\ne$}}1
+    {∈}{{$\in$}}1
+    {₀}{{$_0$}}1
+    {₁}{{$_1$}}1
+    {₂}{{$_2$}}1
+    {₃}{{$_3$}}1
+    {é}{{\'e}}1
+    {⟨}{{$\langle$}}1
+    {⟩}{{$\rangle$}}1,
+}
+
+\title{Toward a Proof that the \pkmn{} Trading Card Game\\ Is Not Turing Complete:\\
+  A Mechanized Finiteness Theorem for a Core Model\\[0.5em]
+  \large Living draft of 21 November 2026}
+\author{N. E. Davis (Sigilante)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Magic: The Gathering has been shown, in a peer-reviewed paper, and Yu-Gi-Oh!\ and Riftbound,
+in preprints, to embed universal computation under stated models of play. We ask the same question of the \pkmn{} Trading Card
+Game and give a partial negative answer. For a core model of the rules, written in Lean~4
+with a small language of card effects, we prove three things without
+\lean{Classical.choice}: legal play only permutes the cards in the game; the damage on one
+\pkmn{} can grow without bound in the middle of an effect, so the reachable state space of the
+model is \emph{not} finite as it stands; and once that damage is capped at the \pkmn{}'s
+printed HP, a cap we prove to be a bisimulation, the states reachable from any start state
+with no pending Knock Out lie in one finite list. Hence no fixed deck expressible in the model
+can simulate an unbounded counter. The theorem covers the model only. For the printed game we
+offer a supported conjecture: an empirical census of 20,776 English card records found no
+state component that is both unbounded and readable by card text, and a survey of the
+rulebooks found that every state component that card text reads is bounded at turn
+boundaries. The census has known
+gaps, and the model omits several mechanics that occur in printed cards. We list both, and we
+set out the programme that would close the distance between the model and the printed game.
+\end{abstract}
+
+\tableofcontents
+
+%======================================================================
+\section{Introduction}\label{sec:intro}
+%======================================================================
+
+\subsection{The question}
+
+A game is \emph{Turing complete}, informally, if a position of the game can be built whose
+continued play carries out an arbitrary computation, so that some question about the play
+(who wins, whether a position is reachable) is as hard as the halting problem. The question
+needs a model of play to be precise: which choices the players make, whether randomness is
+allowed, and which feature of the game stands in for unbounded memory. We fix these choices
+in Section~\ref{sec:model}. This paper asks the question of the \pkmn{} Trading Card Game
+(TCG). No published claim, proof or refutation of its Turing completeness was found by our
+search of the literature (Section~\ref{sec:related}); the only mention we found is a sentence
+in the Yu-Gi-Oh!\ paper that asks whether its result ``holds for other card games (like
+Pokemon TGC)'' \cite{ygo}.
+
+\subsection{Why Magic's method does not transfer}
+
+Churchill, Biderman and Herrick showed that determining the outcome of a game of Magic: The
+Gathering in which all remaining moves are forced is undecidable \cite{cbh-mtg}. Two features
+of Magic carry their construction. The first is \emph{forced play}: stacked libraries and
+mandatory triggered abilities remove every choice from both players. The second is
+\emph{unbounded memory}: the tape is a line of creature tokens, and the game creates a fresh
+token whenever the head reaches the end of the tape, without limit and without consuming
+cards from either deck.
+
+Neither feature has been found in the \pkmn{} TCG. The game has no tokens: as far as our survey
+found, no card creates a game object or brings a card in from outside the game, so the 120
+cards of two 60-card decks are all the objects there are (Section~\ref{sec:survey}). The
+numeric quantity closest to a register, the number of damage counters on a \pkmn{}, is capped
+by the Knock Out rule: a \pkmn{} whose damage reaches its HP is Knocked Out and leaves play. And
+no card forces a player to attack, while every main-phase action is optional, so the
+fully forced model of \cite{cbh-mtg} has no evident analogue (Section~\ref{sec:control}).
+
+\subsection{Nearer precedents}
+
+Two recent preprints obtain universality in card games without Magic's forced play, and they
+show that tokens are not necessary. Nicolosi, Pisciotta and Bresolin \cite{ygo} show that
+deciding whether a given computable strategy wins from a given Yu-Gi-Oh!\ position is
+undecidable (indeed $\Pi^1_1$-complete when the second player may choose natural numbers).
+Their memory is a single uncapped number: the count of spell counters on one card. Dalaklis
+and Fields \cite{riftbound} embed Turing machines in Riftbound under ``game-state-directed''
+strategies, using tokens produced by an unbounded energy loop within a single turn. Both
+results therefore turn on a quantity with no cap. The question for \pkmn{} is whether any such
+quantity exists and can be read by card text.
+
+\subsection{Our answer and its status}
+
+Our answer is a negative result proved for a model, plus evidence that the model is faithful
+enough for the result to transfer. Precisely:
+
+\begin{enumerate}
+\item For a core model of the rules in Lean~4 \cite{lean-pokemon}, with a ten-constructor
+  language of card effects, the clamped reachable state space from any start state with no
+  pending Knock Out is finite (Theorem~\ref{thm:finite}). The clamp is a bisimulation
+  (Theorem~\ref{thm:clamp}), so finiteness speaks about everything play can observe. The
+  unclamped space is infinite (Theorem~\ref{thm:unbounded}). These results are
+  machine-checked and use only the axioms \lean{propext} and \lean{Quot.sound}.
+\item For the printed English card pool, a regular-expression scan and a template census of
+  20,776 card records, followed by reading every sentence in the risk classes, found no
+  unbounded and readable store (Section~\ref{sec:survey}). This is empirical, and its
+  completeness is limited by the patterns used.
+\item That the printed \pkmn{} TCG is not Turing complete is therefore a conjecture
+  (Conjecture~\ref{conj:main}) supported by (1) and (2). It becomes a theorem once the model
+  covers the current rules and every printed card text is expressible in an effect language
+  for which (1) has been re-proved. Section~\ref{sec:programme} sets out that programme.
+\end{enumerate}
+
+\subsection{Status of claims}\label{sec:status}
+
+Table~\ref{tab:status} lists every substantive claim in this draft with the kind of evidence
+behind it. \emph{Machine-checked} means a Lean theorem in \cite{lean-pokemon} at the commit
+cited, passed by the axiom gate of Section~\ref{sec:axioms}. \emph{Surveyed} means a
+systematic but non-exhaustive search of rules documents or card text. \emph{Argued} means a
+proof by hand in this paper, not mechanized. \emph{Conjectured} means no proof is offered.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xll@{}}
+\toprule
+Claim & Status & Where \\
+\midrule
+Model: legal play permutes the cards in the game & machine-checked & Thm.~\ref{thm:perm} \\
+Model: inside one effect, damage on the opponent's Active is unbounded & machine-checked & Thm.~\ref{thm:unbounded} \\
+Model: hence the unclamped reachable set can be infinite & argued (one-line lift) & Rem.~\ref{rem:naive} \\
+Model: every turn-passing move yields a state with no pending Knock Out & machine-checked & Thm.~\ref{thm:turn} \\
+Model: the clamp is a bisimulation for \lean{Run}, \lean{Move}, \lean{Reach} & machine-checked & Thm.~\ref{thm:clamp} \\
+Model: damage off the opponent's Active is bounded by the largest printed HP & machine-checked & Thm.~\ref{thm:damagele} \\
+Model: clamps of reachable states lie in one finite list & machine-checked & Thm.~\ref{thm:finite} \\
+Model: no fixed start state simulates an unbounded counter & argued & Cor.~\ref{cor:counter} \\
+Model: reachability is decidable & argued in principle; not formalized & Rem.~\ref{rem:decide} \\
+Rules: card conservation; no tokens; Bench, Prizes, deck bounded & surveyed (rulebooks) & Sec.~\ref{sec:state} \\
+Rules: damage $<$ HP at every turn boundary & surveyed (rulebook, rulings) & Sec.~\ref{sec:state} \\
+Cards: no unbounded HP, no Knock Out immunity, no game-long count, no outside cards & surveyed (English) & Sec.~\ref{sec:findings} \\
+Cards: Imprison / Shock-wave marker counts uncapped but read only as ``any'' & surveyed (English) & Sec.~\ref{sec:findings} \\
+Cards: no forced attack; Checkup is the only autonomous loop & surveyed (English) & Sec.~\ref{sec:control} \\
+Printed game (English pool, current rules) is not Turing complete & conjectured & Conj.~\ref{conj:main} \\
+Deck size as a parameter restores universality & conjectured & Sec.~\ref{sec:lattice} \\
+Japanese-only cards; pre-Scarlet \& Violet Knock Out timing & not surveyed & Sec.~\ref{sec:limits} \\
+\bottomrule
+\end{tabularx}
+\caption{Status of claims in this draft.}\label{tab:status}
+\end{table}
+
+\paragraph{Plan of the paper.} Section~\ref{sec:state} inventories the state of the printed
+game. Section~\ref{sec:survey} reports the card-pool survey. Section~\ref{sec:model} presents
+the Lean model and its departures from the rulebook, and Section~\ref{sec:results} the
+theorems. Section~\ref{sec:control} explains why control flow is not the obstacle.
+Section~\ref{sec:programme} sets out the programme and open problems, and
+Section~\ref{sec:related} discusses related work.
+
+%======================================================================
+\section{The game and its state}\label{sec:state}
+%======================================================================
+
+We summarize the rules audit of the project's survey S2, which read the \emph{Scarlet \&
+Violet---Surging Sparks} rulebook in full \cite{rb-ssp}
+\todo{the PDF is titled only ``Pok\'emon Trading Card Game Rules'' (2024) and does not name Surging Sparks; the name rests on its file name}, the Advanced Player's Rulebook
+Ver.~3.4 \cite{apr}, tournament documents \cite{trh26,pg26,tr2013}, and two rulings
+\cite{compendium}. The newest rulebook on pokemon.com could not be retrieved, and the older
+rulebooks (Base Set through Black \& White) were not read directly; see
+Section~\ref{sec:limits}.
+
+\paragraph{Cards and zones.} A game is played with two decks of exactly 60 cards each
+\cite{rb-ssp}, so $N = 120$ cards in all. Each player has a deck (ordered), a hand, a discard
+pile, Prize cards (6 at setup), a Lost Zone, one Active \pkmn{}, and a Bench of up to 5
+\pkmn{}; one Stadium is in play. Cards attached to a \pkmn{} (Energy, Tools, earlier evolution
+stages) stay with it. \emph{Card conservation} is the central observation: no rule creates or
+destroys a physical card; effects only move cards among zones, attach them or stack them.
+
+\paragraph{Inventory.} Table~\ref{tab:inventory} condenses S2's inventory. Labels follow S2:
+\textsf{Q} is quoted rules text, \textsf{R} an official ruling, \textsf{I} an inference of the
+auditor, and \textsf{U} an unverified or secondary source.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
+\toprule
+Component & Bounded? & Bound and source \\
+\midrule
+Deck (ordered) & yes & $\le 60$ cards; order is a permutation (\textsf{Q} \cite{rb-ssp}) \\
+Hand & yes & no hand-size limit; bounded by card conservation (\textsf{I}) \\
+Discard pile, Lost Zone & yes & cards of the fixed multiset (\textsf{I}) \\
+Prize cards & yes & 6 at setup; effects move cards in and out (\textsf{Q} \cite{rb-ssp,apr}) \\
+Active, Bench & yes & one Active; Bench $\le 5$, raised to 8 by a few cards (\textsf{Q}/\textsf{U}) \\
+Stadium & yes & one in play (\textsf{Q} \cite{rb-ssp}) \\
+Attached cards & yes & no limit on Energy per \pkmn{} (\textsf{Q} \cite{apr}), but they are cards \\
+Damage counters & yes, via HP & Knock Out at damage $\ge$ HP; overshoot is transient (\textsf{Q}/\textsf{R}, below) \\
+Current HP & yes, if every modifier is bounded & modifiers found are tied to cards in play (\textsf{Q} \cite{apr}); see Sec.~\ref{sec:findings} \\
+Special Conditions & yes & five; Burned and Poisoned replace rather than stack (\textsf{Q} \cite{rb-ssp,apr}) \\
+Once-per-game, once-per-turn flags & yes & finitely many booleans (GX, VSTAR, Supporter, \dots) \\
+History predicates & yes & booleans such as ``during your last turn'' (\textsf{Q} \cite{apr}) \\
+Lingering effects & across turns, yes & last at most about two turns; within a turn their number is unbounded \\
+Whose turn, phase & yes & finite \\
+Turn number & \textbf{no} & no turn limit; card text reads it only as ``first turn'' (\textsf{I}) \\
+Sudden Death games & \textbf{no} & each is a fresh game; no state carries over (\textsf{Q} \cite{rb-ssp}) \\
+Coin-flip history & not state & not stored across turns (\textsf{I}) \\
+\bottomrule
+\end{tabularx}
+\caption{State components of the printed game, after survey S2.}\label{tab:inventory}
+\end{table}
+
+\paragraph{Damage and the Knock Out check.} The rulebook states that ``if a \pkmn{} has total
+damage at least equal to its HP \dots\ it is Knocked Out'' \cite{rb-ssp}. The Advanced
+Player's Rulebook says when this is checked: ``At the end of an attack'', ``At the end of
+\pkmn{} checkup'', and ``Anytime a \pkmn{}'s remaining HP becomes zero, in addition to the
+above'' \cite{apr}. Two rulings confirm that damage may exceed HP transiently: inside one
+attack (``you can put up to 9 damage counters on it even if it doesn't have that much HP
+remaining''), and inside one Checkup, where the Knock Out waits until the between-turns step
+is over \cite{compendium}. So a \pkmn{} carries more damage than its HP only within one attack
+or one Checkup. At the next check it is Knocked Out and its counters leave the game. Our model
+reproduces exactly this transient excess (Section~\ref{sec:results}).
+
+\paragraph{Turn length and game length.} Items, placing Basic \pkmn{} on the Bench, evolution
+and many Abilities have no per-turn limit \cite{rb-ssp}, so a single turn can contain
+unboundedly many actions. The game has no turn limit and, as far as S2 found, no rule against
+infinite loops \cite{rb-ssp,apr,trh26,pg26,tr2013}; tournament play bounds wall-clock time
+by penalties and a round clock, which are not game rules. These unbounded quantities are
+\emph{time}, not memory: they matter for termination but not for the size of the state.
+
+\paragraph{S2's verdict.} At every turn boundary the state lies in a finite set determined by
+the 120 cards, provided four supports hold: card conservation; damage bounded by HP through the
+Knock Out check; HP bounded; and all other memory being finitely many flags. S2 listed eight
+loopholes (L1--L8) it could not close from the rulebooks alone; the census of
+Section~\ref{sec:survey} addresses L1--L5 and, in part, L7 (the largest Bench it
+found is 8).
+
+%======================================================================
+\section{Empirical survey of the card pool}\label{sec:survey}
+%======================================================================
+
+\subsection{Data}
+
+We use the \texttt{pokemon-tcg-data} dataset behind pokemontcg.io \cite{ptcgdata}, at commit
+\texttt{90f27d0} (dated 2026-11-08), fetched on 2026-11-21 by a single shallow clone. It
+holds 20,776 English card records in 177 set files; card text is in the ability, attack and
+rules fields. Japanese-only cards are absent. Two earlier surveys (S3, S4) used the
+LimitlessTCG full-text search \cite{limitless}, which shows current English text with errata
+applied.
+
+\subsection{Method}
+
+The survey ran in three stages, each recorded in the project's survey files.
+\begin{enumerate}
+\item \emph{Regex scan} (S5): patterns for each of S2's loopholes L1--L5 over ability,
+  attack and rules text.
+\item \emph{Template census} (S6): after removing reprints with identical text, 22,745
+  distinct items were split into 36,239 sentences, and each sentence was reduced to a template
+  by replacing numbers, the card's own name, its own attack and ability names, and type words
+  by placeholders. This gave 9,501 distinct templates, of which 6,963 occur once. The 141 most
+  frequent templates cover 50\% of sentences, 2,396 cover 80\%, and 5,878 cover 90\%.
+  Sentences were assigned to 26 effect classes by keyword rules; a by-eye sample put the
+  disputed share of labels at about 10\%.
+\item \emph{Reading by eye} (S6): every distinct sentence selected by the risk-class patterns
+  was read: 170 HP-bearing templates, 68 Knock Out templates, 18 marker templates, 18
+  ``this game'' templates, the 87 quantity-reading sentences whose object was not obviously
+  bounded, 29 stacking templates, and 76 outside-the-game templates.
+\end{enumerate}
+A regular expression finds only the wordings it describes, so ``none found'' below means none
+found by the stated patterns.
+
+\subsection{Findings}\label{sec:findings}
+
+\paragraph{Plainly bounded.}
+\begin{itemize}
+\item \emph{HP modifiers (L1).} Every modifier is a fixed amount from a card in play, a bonus
+  scaled by a count of cards or Prizes (for example ``+$N$ HP for each [type] Energy attached'',
+  or Brambleghast's ``+50 HP for each Prize card your opponent has taken''), or a conditional
+  fixed maximum. No attack or once-per-turn effect adds HP persistently and repeatably. The
+  largest printed HP in the dataset is 380.
+\item \emph{Knock Out prevention (L2).} No card says a \pkmn{} cannot be Knocked Out while
+  damage keeps accumulating. Every prevention either sets the remaining HP to 10, moves the
+  \pkmn{} out of play (to deck, hand or Lost Zone), or changes only where the cards go.
+\item \emph{Game-long counts (L3).} ``This game'' text consists of once-per-game flags, lasting
+  modifiers from once-per-game GX attacks, win or loss clauses, and face-up Prize flags. No
+  card reads a count of events over the whole game.
+\item \emph{Cards from outside the game (L5).} None found. Prize-rebuilding and similar effects
+  move cards between zones.
+\item \emph{Stacking.} Only Croagunk's Poison Up says ``This effect can be applied more than
+  once''. The resulting per-Checkup Poison damage is bounded, because the Poisoned \pkmn{} is
+  Knocked Out once its damage reaches HP.
+\item \emph{Quantities read by effects.} Every count read by card text (``for each'', ``number
+  of'', ``exactly'') is bounded by cards, by HP, by the Prize count, or by a printed constant.
+\end{itemize}
+
+\paragraph{Not plainly bounded.} Four things need a modeling decision rather than a bound.
+\begin{itemize}
+\item \emph{Imprison and Shock-wave markers} (Gardevoir ex $\delta$, Tyranitar ex $\delta$,
+  EX Dragon Frontiers). No card caps how many may sit on one \pkmn{}, and S3 found no ruling
+  either way, so the count may be unbounded. But every card that reads them asks only whether
+  a \pkmn{} has \emph{any}, and every removal removes all of them. As printed, each is an
+  unbounded write-only tally with a zero test: one bit of observable information. We propose
+  to model each as a flag, which is sound only if no card reads the count; the census found
+  none.
+\item \emph{Within-turn loops.} 83 sentences say ``as often as you like'' or ``as many times as
+  you like'', and S6 counted 193 flip-until-tails sentences (S6 also reports 194 in another
+  table; see Section~\ref{sec:limits}). Each gives an unbounded number of repetitions, and each
+  repetition moves cards or counters within a finite state set. They make a turn a
+  reachability closure rather than a fixed program; they add time, not memory.
+\item \emph{Ditto's HP copy.} Two Ditto cards take their HP from the opposing Active \pkmn{}.
+  The value is bounded by that \pkmn{}'s HP, but the definition is circular when both Active
+  \pkmn{} are such Dittos, and a model must choose a resolution.
+\item \emph{Physical and hidden-information cards.} Rock-Paper-Scissors, guessing games about
+  printed card data, and physical actions (``sing a song'', ``throw the card'') bring no new
+  cards, but they are not functions of the game state. A model must treat them as
+  nondeterminism or exclude them.
+\end{itemize}
+
+\subsection{Limits of the survey}\label{sec:limits}
+
+\begin{itemize}
+\item \emph{English only.} Japanese-only cards were not searched systematically. A
+  Japanese-only card that reads a marker count would change the marker verdict above.
+\item \emph{Regex completeness.} Each by-eye list is as complete as the regular expression
+  that selected it. The weakest is the quantity-reading filter, which may miss a quantity read
+  implicitly.
+\item \emph{Classifier error.} About 10\% of sampled class labels were disputed; the counts
+  of the safety-relevant classes were therefore re-read in full rather than trusted.
+\item \emph{Rules not read.} The newest rulebook on pokemon.com was behind a bot wall, and
+  Knock Out timing in pre-Scarlet \& Violet rulebooks (S2's loophole L8) was not read
+  directly; nor was the current TCG Tournament Handbook. Some marker rulings are secondhand.
+\item \emph{Rules-level questions} such as whether markers survive evolution are not settled
+  by card text.
+\item \emph{Small inconsistencies in the survey files.} S6 reports 194 flip-until-tails
+  sentences in its class table and 193 in its verdicts. S3's statement that ``a \pkmn{} in
+  play always has damage $<$ HP'' holds at the Knock Out check points, not inside an attack
+  or Checkup, where S2's rulings allow transient excess. Neither affects a conclusion here.
+\end{itemize}
+
+%======================================================================
+\section{The Lean model}\label{sec:model}
+%======================================================================
+
+The model is the Lean~4 development \cite{lean-pokemon}, branch \texttt{master}, commit
+\texttt{9465880}, built with core Lean v4.36.0 and no libraries. HP and damage are measured in
+damage counters (one counter is 10 HP).
+
+\subsection{State}
+
+A \pkmn{} in play is a record of its top card, the cards beneath it, attached Energy and
+Tools, a number of damage counters, a rotation condition (none, Asleep, Confused, Paralyzed),
+two flags for Poisoned and Burned, and a flag \lean{fresh} for ``put into play or evolved this
+turn''. A player's state holds the deck (head is the top), hand, discard pile, Prizes, Lost
+Zone, an optional Active \pkmn{}, a Bench, an optional Stadium, three once-per-turn flags and
+two once-per-game flags (GX, VSTAR). The game state is:
+
+\begin{lstlisting}
+structure GameState where
+  cur : PlayerState
+  opp : PlayerState
+  /-- is the player to move the one who went first? -/
+  curIsFirst : Bool
+  /-- is this the first turn of the game? -/
+  firstTurn : Bool
+  /-- has the player to move attacked this turn? -/
+  attacked : Bool
+  /-- `some b`: the game is over, won by the first player iff `b` -/
+  winner : Option Bool
+\end{lstlisting}
+
+There is deliberately no turn counter, since card text reads the turn number only as ``first
+turn''. \lean{GameState.allCards} lists every physical card in every zone of both players.
+
+\subsection{The effect language and \lean{Run}}
+
+Card text is represented by a small language: seven primitive operations and three
+combinators.
+
+\begin{lstlisting}
+inductive Effect where
+  | skip | draw
+  | heal (n : Nat)        -- remove up to n counters from the player's Active
+  | counters (n : Nat)    -- place n counters on the opponent's Active
+  | shuffle | search      -- shuffle own deck; move one chosen card from deck to hand
+  | handToBottom          -- put the hand on the bottom of the deck in a chosen order
+  | seq (a b : Effect)
+  | choice (a b : Effect)
+  | iter (a : Effect)
+\end{lstlisting}
+(Docstrings are abbreviated here; constructors and types are as in \texttt{Card.lean}.)
+\lean{choice} covers both coin flips and player decisions, and \lean{iter} covers ``flip until
+tails'' and ``as often as you like''. The relation \lean{Run e g g'} holds when resolving
+\lean{e} in state \lean{g} can produce \lean{g'}. It is nondeterministic: choices, coin flips
+and shuffles are all branches. This suits reachability questions and is silent about
+probability. A theorem about the model speaks only about decks whose card text is expressible
+in \lean{Effect}.
+
+\subsection{Moves and reachability}
+
+\lean{Move g g'} is one legal step for the player to move. Its constructors are:
+\lean{playBasic} (Basic \pkmn{} with positive HP to the Bench, Bench below 5),
+\lean{attach} (one Energy per turn to the Active), \lean{evolve} (the Active, not on the
+first turn of the game, not if put into play this turn), \lean{retreat} (pay the cost in
+Energy, swap with a Benched \pkmn{}, no pending Knock Out), \lean{item}, \lean{supporter}
+(once per turn), \lean{attack} (cost checked by Energy count; base damage as counters, then
+the attack's effect), \lean{knockOut} and \lean{knockOutOwn} (take one Prize), \lean{promote}
+and \lean{promoteOwn}, \lean{noPokemon} and \lean{noPokemonOwn} (the side with no \pkmn{}
+loses), \lean{endTurn} (requires both Actives and \lean{DamageBounded}; the opponent draws),
+and \lean{deckOut} (the opponent cannot draw and loses). Reachability is the
+reflexive-transitive closure, stopped once a winner is set:
+
+\begin{lstlisting}
+inductive Reach : GameState → GameState → Prop where
+  | refl (g : GameState) : Reach g g
+  | step {g₀ g g' : GameState} : Reach g₀ g → g.winner = none → Move g g' → Reach g₀ g'
+\end{lstlisting}
+
+\begin{definition}[\lean{DamageBounded}]
+No Knock Out is pending: every \pkmn{} in play has fewer damage counters than its HP.
+\begin{lstlisting}
+def DamageBounded (g : GameState) : Prop :=
+  ∀ p : InPlay,
+    (g.cur.active = some p ∨ p ∈ g.cur.bench ∨ g.opp.active = some p ∨ p ∈ g.opp.bench) →
+      p.damage < p.top.hp
+\end{lstlisting}
+\end{definition}
+
+\subsection{Departures from the rulebook}\label{sec:departures}
+
+The header of \texttt{Rules.lean} lists every known place where the model is simpler than the
+rulebook. We restate the list in full.
+\begin{enumerate}
+\item Setup, mulligans and the opening coin flip are not modeled; play starts from a set-up
+  state.
+\item Energy is attached to, and evolution applied to, the Active \pkmn{} only.
+\item Attack costs are checked by Energy count, not type. Weakness and Resistance are absent.
+\item Knock Outs are separate moves that must all be taken before the turn can end, rather
+  than being checked at the rulebook's fixed points. Only Active \pkmn{} can be Knocked Out,
+  which suffices while no effect damages the Bench. A Knock Out always gives exactly one
+  Prize. Until its Knock Out is taken, a \pkmn{} at or above its HP stays in play and can still
+  be affected: in particular, the player's own Active, after evolving into a card with less
+  HP, can still attack, take Energy, or be healed back below its HP, where the rulebook would
+  Knock it Out at once.
+\item HP is the printed value: there are no HP modifiers (loophole L1).
+\item There are no markers (Imprison, Shock-wave).
+\item Effects cannot read the state: no ``for each'' counts, no full-HP or zero tests, and no
+  lingering ``this turn'' modifiers. The interface a counter machine needs is therefore absent
+  \emph{by construction}, not by theorem.
+\item An attack does not end the turn; the first player may play a Supporter on the first
+  turn; each player has their own Stadium slot.
+\item \pkmn{} Checkup (Poison, Burn, Sleep, Paralysis recovery) is absent, and no effect in
+  the language applies a Special Condition.
+\item Stadium and Tool cards occupy state but have no move; Abilities are absent.
+\item Start states are not required to be well formed: from a state with no winner and an
+  empty Prize list, a pending Knock Out cannot be taken and the game is stuck with no legal
+  move.
+\item The ``no evolving on your first turn'' rule is applied to the first turn of the game
+  only.
+\end{enumerate}
+
+Item~7 deserves emphasis. A finiteness theorem for a language that cannot read the state is
+weaker evidence than one for a language that can, because the model rules out by fiat the
+zero tests a counter machine needs. Some departures make the model \emph{more}
+permissive than the rules (items 4 and 8), which is harmless for an upper bound on the state
+space. Others leave mechanics out (items 5, 6, 7, 9 and 10), and those are the ones the
+programme of Section~\ref{sec:programme} must remove.
+
+%======================================================================
+\section{Results}\label{sec:results}
+%======================================================================
+
+All statements in this section are copied from the Lean source at commit \texttt{9465880}.
+
+\subsection{Card conservation}
+
+\begin{theorem}[\lean{Run.perm}, \lean{Move.perm}, \lean{Reach.perm}]\label{thm:perm}
+Resolving an effect, making a legal move, and legal play in general permute the cards in the
+game.
+\begin{lstlisting}
+theorem Run.perm {e : Effect} {g g' : GameState} (h : Run e g g') :
+    g'.allCards.Perm g.allCards
+theorem Move.perm {g g' : GameState} (h : Move g g') : g'.allCards.Perm g.allCards
+theorem Reach.perm {g₀ g : GameState} (h : Reach g₀ g) : g.allCards.Perm g₀.allCards
+\end{lstlisting}
+\end{theorem}
+The corollary \lean{Reach.cards\_eq} states that the number of cards is constant. Counting
+alone would not suffice for finiteness, because \lean{Card} is an infinite type (names are
+strings, HP is a natural number); the permutation statement confines every reachable state to
+rearrangements of the starting cards.
+
+\subsection{Naive finiteness is false}
+
+\begin{theorem}[\lean{counters\_unbounded}]\label{thm:unbounded}
+Inside one effect, damage on the opponent's Active \pkmn{} can reach any value.
+\begin{lstlisting}
+theorem counters_unbounded (n : Nat) :
+    ∀ (g : GameState) (p : InPlay), g.opp.active = some p →
+      ∃ g' p', Run (.iter (.counters 1)) g g' ∧ g'.opp.active = some p' ∧
+        p'.damage = p.damage + n
+\end{lstlisting}
+\end{theorem}
+
+The effect \lean{iter (counters 1)} is the model of ``flip a coin until you get tails; one
+damage counter for each heads''.
+
+\begin{remark}\label{rem:naive}
+The theorem is about \lean{Run}, not \lean{Reach}. Lifting it to reachable states takes one
+step by hand: if the player to move holds an Item whose effect is \lean{iter (counters 1)}
+and the opponent has an Active \pkmn{}, the \lean{item} constructor of \lean{Move} applies
+\lean{Run} directly, so states with every damage value on the opponent's Active are reachable,
+and the set of reachable states is infinite. The project's review checked such a lift
+mechanically in a separate probe that is not part of the repository; in this draft we count it
+as argued. The rulebook allows the same transient excess within an attack
+(Section~\ref{sec:state}), so this is not an artifact of the model. It means that the claim
+``the reachable state space is finite'' is false as stated, for the model and, read literally,
+for the printed game.
+\end{remark}
+
+\subsection{Turn boundaries}
+
+\begin{theorem}[\lean{Move.damageBounded\_of\_turn}]\label{thm:turn}
+Every move that passes the turn yields a state with no pending Knock Out.
+\begin{lstlisting}
+theorem Move.damageBounded_of_turn {g g' : GameState} (h : Move g g')
+    (ht : g'.curIsFirst ≠ g.curIsFirst) : DamageBounded g'
+\end{lstlisting}
+\end{theorem}
+This is immediate from the guard on \lean{endTurn}, the only move that changes
+\lean{curIsFirst}.
+
+\subsection{The clamp and its bisimulation}
+
+\begin{definition}[\lean{InPlay.clamp}, \lean{GameState.clamp}]
+\begin{lstlisting}
+def InPlay.clamp (p : InPlay) : InPlay := { p with damage := min p.damage p.top.hp }
+def GameState.clamp (g : GameState) : GameState :=
+  { g with opp := { g.opp with active := g.opp.active.map InPlay.clamp } }
+\end{lstlisting}
+The clamp caps the damage on the \emph{opponent's} Active \pkmn{} at its printed HP and leaves
+every other component unchanged.
+\end{definition}
+
+\begin{theorem}[\lean{Run.clamp\_sim}, \lean{Move.clamp\_sim}, \lean{Reach.clamp\_sim}]\label{thm:clamp}
+States with the same clamp have the same moves, up to the same clamp.
+\begin{lstlisting}
+theorem Run.clamp_sim {e : Effect} {g₁ g₁' : GameState} (h : Run e g₁ g₁') :
+    ∀ {g₂ : GameState}, g₁.clamp = g₂.clamp →
+      ∃ g₂', Run e g₂ g₂' ∧ g₁'.clamp = g₂'.clamp
+theorem Move.clamp_sim {g₁ g₁' g₂ : GameState} (h : Move g₁ g₁')
+    (hc : g₁.clamp = g₂.clamp) : ∃ g₂', Move g₂ g₂' ∧ g₁'.clamp = g₂'.clamp
+theorem Reach.clamp_sim {g₀ h₀ g₁ : GameState} (h : Reach g₀ g₁) (hc : g₀.clamp = h₀.clamp) :
+    ∃ g₂, Reach h₀ g₂ ∧ g₁.clamp = g₂.clamp
+\end{lstlisting}
+\end{theorem}
+
+Since ``having the same clamp'' is an equivalence relation, \lean{Move.clamp\_sim} gives both
+directions of a strong bisimulation: the kernel of \lean{clamp} is a bisimulation for
+\lean{Move}. Any question about legal play that does not read the exact damage above HP on the
+opponent's Active can therefore be asked of clamped states instead.
+
+The key cases are the following. Adding counters commutes with the clamp
+(\lean{InPlay.clamp\_add}); the Knock Out test \lean{hp} $\le$ \lean{damage} is invariant under it
+(\lean{InPlay.clamp\_inj\_ko}); and \lean{endTurn} and \lean{deckOut} require
+\lean{DamageBounded}, under which the clamp is the identity on the opponent's Active
+(\lean{InPlay.clamp\_inj\_of\_lt}). Only the opponent's Active is clamped, for a reason worth
+stating. The player's own Active can exceed its HP mid-turn by evolving into a card with
+less HP (departure~4), and \lean{heal} reads its damage exactly: with HP 3, damage 5 healed by 2
+leaves 3, still at HP, whereas the clamped damage 3 healed by 2 leaves 1. Clamping there would
+not be a bisimulation. That damage is bounded instead by the next theorem.
+
+\begin{theorem}[\lean{Reach.damage\_le}]\label{thm:damagele}
+From a start state with no pending Knock Out, in every reachable state, mid-turn states
+included, every \pkmn{} in play other than the opponent's Active has at most
+\lean{maxHp g$_0$.allCards} damage counters, the largest printed HP among the cards of the game.
+\begin{lstlisting}
+theorem Reach.damage_le {g₀ g : GameState} (h₀ : DamageBounded g₀) (h : Reach g₀ g) :
+    DamageLe (maxHp g₀.allCards) g
+\end{lstlisting}
+\end{theorem}
+Here \lean{DamageLe M g} says that the player's Active and every Benched \pkmn{} on either side
+carry at most \lean{M} counters. The bound on the player's own evolved Active holds because
+evolution keeps the damage, and that damage was below the HP of the card underneath, which is
+still in the game.
+
+\subsection{Finiteness}
+
+\begin{theorem}[\lean{Reach.finite}]\label{thm:finite}
+From a start state with no pending Knock Out, there is a finite list of states containing the
+clamp of every reachable state.
+\begin{lstlisting}
+theorem Reach.finite {g₀ : GameState} (h₀ : DamageBounded g₀) :
+    ∃ L : List GameState, ∀ g, Reach g₀ g → g.clamp ∈ L
+\end{lstlisting}
+\end{theorem}
+
+\begin{theorem}[\lean{Reach.finite\_damageBounded}]\label{thm:finitedb}
+From a start state with no pending Knock Out, the reachable states with no pending Knock Out,
+among them every state at a turn boundary (Theorem~\ref{thm:turn}), lie in a finite list.
+\begin{lstlisting}
+theorem Reach.finite_damageBounded {g₀ : GameState} (h₀ : DamageBounded g₀) :
+    ∃ L : List GameState, ∀ g, Reach g₀ g → DamageBounded g → g ∈ L
+\end{lstlisting}
+\end{theorem}
+
+The witness is explicit: the list \lean{states g$_0$.allCards}, built from all lists of length at
+most $N$ over the $N$ starting cards for each zone, the \pkmn{} cards among them as top cards,
+damage up to \lean{maxHp}, and every value of each flag. It is a crude over-approximation, it
+is never computed, and its length is astronomically larger than the true reachable set. The
+proof uses only Theorem~\ref{thm:perm} (cards are only permuted) and the clamped form of
+Theorem~\ref{thm:damagele}. The only hypothesis on the start state is
+\lean{DamageBounded g$_0$}.
+
+\subsection{What the theorem licenses, and what it does not}
+
+\begin{corollary}[argued, not mechanized]\label{cor:counter}
+Fix a start state $g_0$ of the model with \lean{DamageBounded g$_0$}. Say that $g_0$
+\emph{simulates} a machine $M$ if there is an injective map from the configurations reachable
+by $M$ to clamp-classes of states reachable from $g_0$. Then $M$ has finitely many reachable
+configurations. In particular, no fixed deck whose card text is expressible in \lean{Effect}
+simulates an unbounded counter, and so none simulates a two-counter machine or a Turing
+machine with unbounded tape.
+\end{corollary}
+\begin{proof}
+By Theorem~\ref{thm:finite} the clamp-classes reachable from $g_0$ lie in a finite list.
+\end{proof}
+The corollary is immediate; its content lies in Theorems~\ref{thm:finite}
+and~\ref{thm:clamp}, which together say that the game reachable from $g_0$ is bisimilar to a
+finite transition system. The notion of simulation is deliberately weak, so the corollary
+excludes any encoding that needs infinitely many distinguishable configurations from one
+start state.
+
+\begin{remark}[decidability]\label{rem:decide}
+Reachability in the model should be decidable, but this is not formalized. The finite list
+bounds the clamped reachable set; to decide reachability one also needs the clamped one-step
+successor relation to be decidable. For \lean{Move} this reduces to \lean{Run}, where
+\lean{iter} has infinitely many outcomes; a saturation argument (iterate until no new clamped
+state appears, which must happen within the finite list) should settle it, together with
+decidable equality on states. Neither step is in the development.
+\end{remark}
+
+The results do \emph{not} establish the following.
+\begin{itemize}
+\item That the printed game is not Turing complete. The model omits Checkup, Special
+  Conditions, HP modifiers, markers, Abilities and every effect that reads the state
+  (Section~\ref{sec:departures}).
+\item Any bound on the size of the reachable set uniform in the deck. The list depends on
+  $g_0$, and \lean{Card} is an infinite type.
+\item Anything about well-formed games specifically. Start states are not required to be
+  well formed, and some ill-formed states deadlock.
+\item Anything about probability. \lean{Run} is nondeterministic and ignores the
+  distribution of coin flips and shuffles.
+\item Per-player card ownership. \lean{Reach.perm} permutes the cards of both players
+  together; it does not show that each player's cards stay on that player's side.
+\end{itemize}
+
+\subsection{Axioms and how they are enforced}\label{sec:axioms}
+
+No theorem above uses an axiom other than \lean{propext} and \lean{Quot.sound} (some use
+fewer). None uses \lean{Classical.choice}, and the witness for Theorem~\ref{thm:finite} is an explicit list. The
+development uses core Lean only. Core's \lean{List.perm\_iff\_count} depends on
+\lean{Classical.choice}, so \texttt{ListPerm.lean} proves the needed direction (equal counts
+give a permutation, for a type with decidable equality) constructively.
+
+Enforcement is mechanical. \texttt{Audit.lean} runs a single command,
+\lean{\#audit\_namespace Pokemon}, which collects the axioms of every theorem declared in the
+project's modules, private and compiler-generated ones included, and raises a build error if
+any depends on an axiom other than \lean{propext} or \lean{Quot.sound}. Since \lean{sorry}
+elaborates to the axiom \lean{sorryAx}, an unfinished proof fails the same check. The command
+also fails if a file under \texttt{Pokemon/} is not imported by the audit file. The CI script
+\texttt{scripts/audit.sh} requires the command's success line in the build log. At the time
+of writing that line reports 62 hand-written theorems and 198 generated ones. The gate was
+tested against planted violations (a proof by excluded middle, a \lean{sorry}, a private
+offender, a theorem outside the namespace, and an unimported file); each failed the build.
+One gap is known: a theorem written in the root file \texttt{Pokemon.lean} is not checked.
+
+%======================================================================
+\section{Why control flow is not the obstacle}\label{sec:control}
+%======================================================================
+
+Survey S4 searched the card pool for mandatory effects, forced actions, conditionals and
+automatic loops. Its findings bear on which model of play is realistic, and they place the
+difficulty in memory rather than control.
+
+\paragraph{No forced play.} Every main-phase action is optional, including attacking, and no
+card in the pool forces a player to attack. The mandatory surface consists of the draw at the
+start of each turn, \pkmn{} Checkup, triggers that fire on a player's optional action, and a
+handful of state triggers (Neo Genesis Berries, Star Piece, Team Aqua and Magma Belts,
+Brock's Primeape's ``Scram'', Ditto's ``Transform''). Checkup is the only loop body that runs
+by itself: a synchronous update of damage counters (Poison, Burn, auras, heals) followed by
+one Knock Out check. Automatic evolution only advances, and the cards that cause it discard
+themselves, so a purely mandatory run passes through a bounded number of modes. S4 found no
+configuration in which the game runs indefinitely with no decisions.
+
+\paragraph{Plenty of control.} The pool nonetheless offers threshold and equality tests on
+damage, HP, hand size and Prizes; parity tests (Mr.\ Mime-GX's Magic Odds); a multi-way branch
+on hand size (Kricketune); deterministic timers (Paralysis); derandomizers that turn in-turn
+coin flips into tails (Shiftry, Malamar); and choice pruners (Item, Ability, evolution and
+retreat locks). Under a cooperative or solitaire model, where one player executes a program,
+the player is the program counter and control is cheap. The realistic models of play are
+therefore cooperative play, or a ``unique legal line'' enforced by locks.
+
+\paragraph{The deck and Prize clocks.} Two clocks end a game, and any long computation must
+defeat both. The \emph{deck clock}: a player who cannot draw at the start of their turn loses
+\cite{rb-ssp}, so an unbounded game needs cards to return to the deck at an average rate of
+at least one per turn per player; mandatory refills are rare (Scram, and a few coin-gated
+cards), but optional recycling is common. The \emph{Prize clock}: almost every Knock Out
+yields a Prize, and taking the last Prize wins; only a few bodies (Shedinja's Empty Shell, Robo
+Substitute, Lillie's Pok\'e Doll) give none. The extra-turn loop of Medicham V's Yoga Loop with
+Zoroark's Foul Play or Mew ex's Genome Hacking, ruled to ``work infinitely'', needs a Knock Out
+per iteration and is bounded in practice by the opponent's board and Prizes.
+
+These clocks bound the \emph{time} of particular strategies. They are not needed for the
+finiteness result, which bounds the \emph{memory}: in the model, \lean{handToBottom} already
+lets a player refill the deck, so games of unbounded length exist, and Theorem~\ref{thm:finite}
+holds regardless. A game of unbounded length over a finite state space is a finite automaton
+running forever.
+
+%======================================================================
+\section{Programme and open problems}\label{sec:programme}
+%======================================================================
+
+\subsection{Closing the gap to the printed game}
+
+The conjecture this paper supports is the following.
+
+\begin{conjecture}\label{conj:main}
+For every pair of legal decks drawn from the English card pool, under the current
+(Scarlet \& Violet era) rules, the states of the game reachable from a set-up position, with
+damage on each \pkmn{} capped at its current HP, lie in a finite set. Consequently the printed
+\pkmn{} TCG, under these rules and over this pool, is not Turing complete in any model of
+play whose memory is the game state.
+\end{conjecture}
+
+The stated exclusions are Japanese-only cards and Knock Out timing under pre-Scarlet \&
+Violet rules. To prove the conjecture we propose to extend the model in steps, re-proving
+Theorems~\ref{thm:perm}, \ref{thm:clamp} and~\ref{thm:finite} after each:
+
+\begin{enumerate}
+\item \emph{Checkup and stacking Poison.} Add Special Conditions, Checkup, and Croagunk's
+  stacking Poison. Damage placed during Checkup exceeds HP transiently, so the clamp must be
+  extended to every \pkmn{} that Checkup can damage.
+\item \emph{Markers.} Model Imprison and Shock-wave markers as flags. This is sound only under
+  the survey's finding that no card reads their count, and the assumption must be stated as
+  such.
+\item \emph{HP modifiers.} Make HP a function of the board. Every modifier the census found
+  is bounded by cards in play or by Prizes, so a bound of the form ``largest printed HP plus
+  the largest total modifier'' should replace \lean{maxHp}. Ditto's HP copy needs an explicit
+  convention for the circular case.
+\item \emph{State-reading effects.} Add ``for each'' counts, full-HP and zero tests,
+  thresholds and equality tests, and lingering ``this turn'' modifiers. This is the step that
+  gives a counter machine its interface. Finiteness should survive it, because every quantity
+  read is bounded, but this is where the proof will be tested.
+\item \emph{Abilities, Stadiums, Tools}, and Knock Out of Benched \pkmn{}.
+\item \emph{Well-formedness and decidability.} A \lean{WellFormed} predicate on start states
+  with a no-deadlock lemma; per-player card ownership; and the decidability of
+  Remark~\ref{rem:decide}.
+\end{enumerate}
+
+\paragraph{Importer and coverage.} The theorem's reach is measured by how much card text the
+effect language expresses. We plan an importer from the census templates to \lean{Effect},
+and a coverage count: the share of sentences, templates and cards that it translates. The
+census suggests the shape of the task: 141 templates cover half of all sentences, but the last
+tenth of the sentences needs several thousand more templates. Cards outside the language are
+named exceptions, each with its reason.
+
+\paragraph{Japanese-only cards.} These were not surveyed. Closing the conjecture over the
+whole printed game requires a corpus of their text, and the marker verdict is the part most
+at risk.
+
+\subsection{The relaxation lattice}\label{sec:lattice}
+
+A finiteness theorem invites the converse question: which single change to the rules would
+restore universality? We record candidates. \emph{Nothing in this subsection is proved}; each
+item is a conjecture or an idea to test.
+\begin{itemize}
+\item \emph{Deck size as a parameter.} With decks of unbounded size, the deck is a queue:
+  Caitlin, Kofu and Claydol's Cosmic Power put cards from hand on the bottom of the deck in a
+  chosen order, and the draw removes cards from the top. A cooperative player could then run a
+  tag system, with deck-out as halting. The obstacle is that many effects shuffle the deck,
+  destroying order; a construction must avoid them. For bounded deck size $n$ the same queue
+  suggests a hardness result for the generalized game.
+\item \emph{No Knock Out check, or unbounded HP.} Damage counters already support increment
+  (attacks, counter placement), decrement (healing, moving counters) and a zero test (``full
+  HP'', ``has no damage counters''). Without the cap, two \pkmn{} would carry two unbounded
+  counters, which suffices for a Minsky machine under cooperative play.
+\item \emph{A count reader for markers.} A card that reads the number of Imprison markers,
+  together with a card that removes one at a time, would make the marker tally a counter.
+\item \emph{An unbounded Bench}, which might support a row of cells.
+\end{itemize}
+
+\subsection{Other directions}
+
+\begin{itemize}
+\item \emph{Complexity of the generalized game.} With deck size, Bench size or card pool as
+  parameters, the game becomes a family of finite games, and its complexity is open. The
+  survey's Poet session suggested constraint logic for EXPTIME-hardness; this is untested
+  \cite{hearn-demaine-ncl,hearn-demaine-book}.
+\item \emph{Probability.} The game is stochastic. For a probabilistic finite automaton the
+  acceptance probability of a given word is computable, but the emptiness (threshold) question
+  is undecidable \cite{nasu-honda,paz,condon-lipton}, even with the numbers of states and
+  letters fixed \cite{blondel-canterini} and, indeed, for one fixed automaton when only the
+  starting distribution varies \cite{rote-pfa}.
+  Whether the \pkmn{} TCG's coins and shuffles yield an interesting probabilistic question is
+  open.
+\item \emph{Nested copy attacks.} Copy attacks can call copy attacks (Togetic, Metronome,
+  Foul Play), and a call stack is a possible source of memory inside effect resolution. S4
+  found that each level of nesting adds a choice and that depth is bounded by the board.
+\end{itemize}
+
+%======================================================================
+\section{Related work}\label{sec:related}
+%======================================================================
+
+\paragraph{Card games.} Magic: The Gathering is Turing complete under forced play, using
+creature tokens as tape \cite{cbh-mtg}; a follow-up shows that optimal play is
+non-arithmetic \cite{biderman-arith}, and a later paper embeds a programming language in Magic
+\cite{yin-churchill} (not read by us). Yu-Gi-Oh!\ \cite{ygo} and Riftbound \cite{riftbound}
+are discussed in Section~\ref{sec:intro}. A self-published argument claims that Netrunner is
+Turing complete under ``choose or lose'' constraints \cite{netrunner-tc}; we have not verified
+its content. Lower bounds without universality include weak NP-hardness of Netrunner
+mate-in-1 or -2 \cite{bosboom-netrunner}, PSPACE-hardness of perfect-information Hearthstone
+\cite{zhang-hearthstone}, and NP-hardness of single-player UNO \cite{uno}. Turing completeness
+has also been shown for Sid Meier's Civilization \cite{dewynter-civ}, a video game. Results
+on the \pkmn{} \emph{video} games \cite{nintendo-hard} concern a different game.
+
+Our search found no negative argument (``finite state, so not universal'') for the \pkmn{}
+TCG in any source; we did not search for negative results about other card games. A negative
+result is only as good as the model it is proved for, which is why we mechanize the model and
+list its departures.
+
+\paragraph{\pkmn{} TCG in Lean.} Ramos and Soria \cite{ramos-soria} describe a Lean~4
+development of the \pkmn{} TCG aimed at metagame analysis: a matchup matrix over 14
+archetypes, Nash equilibria and replicator dynamics. By their account the artifact has 87
+files, about 31,900 lines and 2,627 theorems, with no \lean{sorry} or custom axioms, and 145
+theorems use \lean{native\_decide} in the game-theory layer. As described in their
+Section~III-B, the rules layer includes a game state with per-player zones, turn ownership and
+a finite phase machine, a deck-legality checker, card-count conservation, Bench-size bounds,
+Prize accounting, one card effect (\lean{professorsResearchEffect}) with a per-player card
+count theorem, and a type-effectiveness table. In the part of the text we read, we found no
+step relation, no Knock Out or damage semantics, no effect language, and no statement about
+finiteness, decidability, Turing completeness or complexity. We read roughly 80,000 of the
+106,000 characters of the arXiv HTML verbatim and the rest only as a summary; the PDF was not
+parsed. \emph{We have not inspected their Lean source}, which sits behind a login on IEEE
+DataPort \todo{login requirement unverified; the paper calls the Lean artifact ``anonymized supplementary material'' and cites an IEEE DataPort record}, so we cannot compare definitions. Their work is prior art for ``Lean and the \pkmn{}
+TCG''; our contribution is an operational semantics with an effect language, and the
+finiteness theorem proved over it.
+
+%======================================================================
+\section{Conclusion}
+%======================================================================
+
+For a core model of the \pkmn{} TCG we have a machine-checked, choice-free proof that the
+reachable states are finite once excess damage, which play cannot observe, is capped. The
+naive statement without the cap is false, in the model and in the rules. A census of the
+English card pool found no unbounded readable store of the kind that carries the Magic,
+Yu-Gi-Oh!\ and Riftbound constructions. Whether the printed game is Turing complete remains
+open in the strict sense. The work needed to settle it is listed in
+Section~\ref{sec:programme}: chiefly, effects that read the state, Checkup, HP modifiers and
+markers, each followed by a re-proof of finiteness.
+
+\paragraph{Availability.} The Lean development is public \cite{lean-pokemon}. The survey files
+and census scripts are not yet published. \todo{decide where the survey, census scripts and
+template table will be published, and cite them.}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}

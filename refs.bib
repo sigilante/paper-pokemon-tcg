@@ -1,0 +1,326 @@
+% refs.bib for the Pokemon TCG finiteness draft.
+% Checked against primary sources on 2026-11-21 (arXiv abstract/HTML pages, LIPIcs/Dagstuhl,
+% Crossref, publisher pages, the documents themselves). Fields that could not be checked
+% carry a "% UNVERIFIED:" comment.
+
+% ---------------------------------------------------------------- card-game computability
+
+% Primary source: LIPIcs page (Dagstuhl) and arXiv abs/1904.09828 (cs.AI; v1 24 Mar 2019, v2 23 Apr 2019).
+% The Dagstuhl page lists publication date 2020-09-16 and some citations say 2020;
+% the proceedings are FUN 2021, kept as year.
+@inproceedings{cbh-mtg,
+  author    = {Churchill, Alex and Biderman, Stella and Herrick, Austin},
+  title     = {Magic: The Gathering is {Turing} Complete},
+  booktitle = {10th International Conference on Fun with Algorithms (FUN 2021)},
+  series    = {Leibniz International Proceedings in Informatics (LIPIcs)},
+  volume    = {157},
+  pages     = {9:1--9:19},
+  publisher = {Schloss Dagstuhl--Leibniz-Zentrum f{\"u}r Informatik},
+  year      = {2021},
+  doi       = {10.4230/LIPIcs.FUN.2021.9},
+  note      = {arXiv:1904.09828 [cs.AI]}
+}
+
+% arXiv abs/2003.05119 (cs.AI), submitted 11 Mar 2020; no journal reference listed.
+@misc{biderman-arith,
+  author = {Biderman, Stella},
+  title  = {Magic: the Gathering is as Hard as Arithmetic},
+  year   = {2020},
+  note   = {arXiv:2003.05119 [cs.AI], preprint}
+}
+
+% Dagstuhl/LIPIcs page for FUN 2024.
+@inproceedings{yin-churchill,
+  author    = {Yin, Howe Choong and Churchill, Alex},
+  title     = {A Programming Language Embedded in {Magic: The Gathering}},
+  booktitle = {12th International Conference on Fun with Algorithms (FUN 2024)},
+  series    = {Leibniz International Proceedings in Informatics (LIPIcs)},
+  volume    = {291},
+  pages     = {31:1--31:19},
+  publisher = {Schloss Dagstuhl--Leibniz-Zentrum f{\"u}r Informatik},
+  year      = {2024},
+  doi       = {10.4230/LIPIcs.FUN.2024.31}
+}
+
+% arXiv abs/2603.02863 (math.LO; cross-lists cs.CC, cs.GT). v1 3 Mar 2026, v2 11 Mar 2026.
+% No journal reference listed: preprint.
+@misc{ygo,
+  author = {Nicolosi, Orazio and Pisciotta, Federico and Bresolin, Lorenzo},
+  title  = {Deciding winning strategies in {Yu-Gi-Oh!} {TCG} is hard},
+  year   = {2026},
+  note   = {arXiv:2603.02863 [math.LO], v2, preprint}
+}
+
+% arXiv abs/2609.33839 (cs.CC). v1 27 Sep 2026, v2 30 Sep 2026. No journal reference: preprint.
+@misc{riftbound,
+  author = {Dalaklis, Nathan and Fields, Beckett},
+  title  = {Riftbound is {Turing} Complete},
+  year   = {2026},
+  note   = {arXiv:2609.33839 [cs.CC], v2, preprint}
+}
+
+% arXiv abs/2607.08692 (cs.GT, cross-list cs.FL), submitted 9 Jul 2026; no journal reference.
+% Artifact is reference [44] of the paper (IEEE DataPort, DOI below); its Lean source was not inspected.
+@misc{ramos-soria,
+  author = {Ramos, Arthur F. and Soria, Tulio},
+  title  = {From Rules to {Nash} Equilibria: A {Lean}~4 Case Study in Game-Theoretic Analysis
+            of a Competitive Trading Card Game},
+  year   = {2026},
+  note   = {arXiv:2607.08692 [cs.GT], preprint. Artifact: A. F. Ramos and T. Soria,
+            ``Formally verified Pok\'emon {TCG} metagame analysis: tournament data, matchup
+            matrices, and {Lean}~4 proof artifact'', IEEE DataPort, doi:10.21227/vty8-p429}
+}
+
+% Forum thread (OP username "callforjudgement"), forum.stimhack.com, posted 2023-07-30; read 2026-11-21.
+% UNVERIFIED: the blog repost at logic-bomb.net (2023-08-26) and the linked proof text were not opened.
+@misc{netrunner-tc,
+  author = {{callforjudgement (forum username)}},
+  title  = {Netrunner is {Turing} complete},
+  year   = {2023},
+  howpublished = {StimHack forum, \url{https://forum.stimhack.com/t/netrunner-is-turing-complete/11190}},
+  note   = {Posted 2023-07-30; accessed 2026-11-21. Self-published, not peer reviewed. Blog repost: logic-bomb.net, 2023-08-26}
+}
+
+% arXiv abs/1710.05121 (cs.CC), submitted 14 Oct 2017; no journal reference listed.
+@misc{bosboom-netrunner,
+  author = {Bosboom, Jeffrey and Hoffmann, Michael},
+  title  = {Netrunner Mate-in-1 or -2 is Weakly {NP}-Hard},
+  year   = {2017},
+  note   = {arXiv:1710.05121 [cs.CC], preprint}
+}
+
+% arXiv abs/2305.12731 (cs.CC), submitted 22 May 2023; no journal reference listed.
+% (The notes had a hyphen, "PSPACE-hard", and "Perfect-Information"; the arXiv title is as below.)
+@misc{zhang-hearthstone,
+  author = {Zhang, Zhujun},
+  title  = {Perfect Information {Hearthstone} is {PSPACE}-hard},
+  year   = {2023},
+  note   = {arXiv:2305.12731 [cs.CC], preprint}
+}
+
+% Journal version, per the authors' page erikdemaine.org/papers/Uno_TCS/ (5 authors, DOI given there).
+% The arXiv version (arXiv:1003.2851, current title "The complexity of UNO", cs.DM) and the FUN 2010
+% version (LNCS 6099, pp. 133--144) list Nicholas J. A. Harvey as a sixth author; the journal version does not.
+% UNVERIFIED: volume/pages/DOI taken from the authors' page and a search summary, not the publisher page (403/429).
+@article{uno,
+  author  = {Demaine, Erik D. and Demaine, Martin L. and Uehara, Ryuhei and Uno, Takeaki and Uno, Yushi},
+  title   = {{UNO} is hard, even for a single player},
+  journal = {Theoretical Computer Science},
+  volume  = {521},
+  pages   = {51--61},
+  year    = {2014},
+  doi     = {10.1016/j.tcs.2013.11.023},
+  note    = {Preprint: arXiv:1003.2851}
+}
+
+% arXiv abs/2104.14647 gives IEEE Trans. Games 15(2), June 2023, DOI 10.1109/TG.2022.3166874.
+% UNVERIFIED: pages 292--299 carried over from the first draft; IEEE page could not be read.
+@article{dewynter-civ,
+  author  = {de Wynter, Adrian},
+  title   = {Turing Completeness and {Sid Meier's Civilization}},
+  journal = {IEEE Transactions on Games},
+  volume  = {15},
+  number  = {2},
+  pages   = {292--299},
+  year    = {2023},
+  doi     = {10.1109/TG.2022.3166874},
+  note    = {arXiv:2104.14647}
+}
+
+% Crossref (journal), arXiv abs/1203.1895 (v1 8 Mar 2012). Video games, not the card game.
+@article{nintendo-hard,
+  author  = {Aloupis, Greg and Demaine, Erik D. and Guo, Alan and Viglietta, Giovanni},
+  title   = {Classic {Nintendo} Games are (Computationally) Hard},
+  journal = {Theoretical Computer Science},
+  volume  = {586},
+  pages   = {135--160},
+  year    = {2015},
+  doi     = {10.1016/j.tcs.2015.02.037},
+  note    = {arXiv:1203.1895}
+}
+
+% ---------------------------------------------------------------- constraint logic, probabilistic automata
+
+% Crossref record for the journal article.
+@article{hearn-demaine-ncl,
+  author  = {Hearn, Robert A. and Demaine, Erik D.},
+  title   = {{PSPACE}-completeness of sliding-block puzzles and other problems through the
+             nondeterministic constraint logic model of computation},
+  journal = {Theoretical Computer Science},
+  volume  = {343},
+  number  = {1--2},
+  pages   = {72--96},
+  year    = {2005},
+  doi     = {10.1016/j.tcs.2005.05.008}
+}
+
+% Publisher page (Routledge) and authors' page: A K Peters, July 2009. ISBN-13 from the publisher URL
+% and a search summary. The book's table of contents has two-player bounded and unbounded constraint-logic games.
+@book{hearn-demaine-book,
+  author    = {Hearn, Robert A. and Demaine, Erik D.},
+  title     = {Games, Puzzles, and Computation},
+  publisher = {A K Peters},
+  address   = {Wellesley, MA},
+  year      = {2009},
+  isbn      = {978-1-56881-322-6}
+}
+% UNVERIFIED: place of publication (Wellesley, MA) not confirmed from a source read.
+
+% Library catalogue records: Academic Press, New York, 1971; ISBN-13 978-0-12-547650-8.
+% Rote (arXiv:2412.05198, fn. 1) notes the basic undecidability theorem is commonly misattributed
+% to Paz, who credited Nasu and Honda.
+@book{paz,
+  author    = {Paz, Azaria},
+  title     = {Introduction to Probabilistic Automata},
+  publisher = {Academic Press},
+  address   = {New York},
+  year      = {1971}
+}
+
+% Per Rote (arXiv:2412.05198, Sec. 1.2): first proof that PFA emptiness is undecidable.
+% UNVERIFIED: title wording (a Springer reference list omits "recursively") and issue number;
+% author given names and volume/pages from a search summary; paper not read.
+@article{nasu-honda,
+  author  = {Nasu, Masakazu and Honda, Namio},
+  title   = {Mappings induced by {PGSM}-mappings and some recursively unsolvable problems of
+             finite probabilistic automata},
+  journal = {Information and Control},
+  volume  = {15},
+  pages   = {250--273},
+  year    = {1969}
+}
+
+% Rote (arXiv:2412.05198, Sec. 1.2) gives this as an independent proof of PFA-emptiness undecidability.
+% UNVERIFIED: the paper itself was not read (PDF unreadable); pages and DOI from search summaries (Scilit, JACM bibliography).
+@inproceedings{condon-lipton,
+  author    = {Condon, Anne and Lipton, Richard J.},
+  title     = {On the complexity of space bounded interactive proofs (extended abstract)},
+  booktitle = {30th Annual Symposium on Foundations of Computer Science (FOCS 1989)},
+  pages     = {462--467},
+  publisher = {IEEE},
+  year      = {1989},
+  doi       = {10.1109/SFCS.1989.63519}
+}
+
+% Crossref record; given names from a search summary of the Springer record.
+@article{blondel-canterini,
+  author  = {Blondel, Vincent D. and Canterini, Vincent},
+  title   = {Undecidable problems for probabilistic automata of fixed dimension},
+  journal = {Theory of Computing Systems},
+  volume  = {36},
+  number  = {3},
+  pages   = {231--245},
+  year    = {2003},
+  doi     = {10.1007/s00224-003-1061-2}
+}
+
+% arXiv abs/2412.05198 (cs.FL), submitted 6 Dec 2024.
+@misc{rote-pfa,
+  author = {Rote, G{\"u}nter},
+  title  = {Probabilistic Finite Automaton Emptiness is Undecidable for a Fixed Automaton},
+  year   = {2024},
+  note   = {arXiv:2412.05198 [cs.FL], preprint}
+}
+
+% ---------------------------------------------------------------- rules documents (S2)
+
+% The PDF's own title is "Pok\'emon Trading Card Game Rules" (c) 2024 Pok\'emon; credits The Pok\'emon Company
+% International for the English version. PDF metadata date 2024-07-30. The document text does not name
+% "Surging Sparks"; that association rests on the file name only.
+% UNVERIFIED: canonical pokemon.com URL and set edition. The URL below is a mirror.
+@misc{rb-ssp,
+  author       = {{The Pok\'emon Company International}},
+  title        = {Pok\'emon Trading Card Game Rules},
+  year         = {2024},
+  howpublished = {\url{https://media.pocketmonsters.net/pdf/TCG/ssp_rulebook_en.pdf}},
+  note         = {PDF file name \texttt{ssp\_rulebook\_en.pdf}; accessed 2026-11-21}
+}
+
+% Document header: "Advanced Player's Rulebook Ver. 3.4 (01/08/2025)"; footer "Pok\'emon Card Game Advanced Player's Rulebook Ver. 3.4".
+% UNVERIFIED: the publishing entity (document does not name one; hosted on The Pok\'emon Card Game Asia site).
+@misc{apr,
+  author       = {{Pok\'emon Card Game Asia website}},
+  title        = {Pok\'emon Card Game Advanced Player's Rulebook, Ver.~3.4 (01/08/2025)},
+  year         = {2025},
+  howpublished = {\url{https://asia.pokemon-card.com/hk-en/wp-content/uploads/sites/6/2025/10/EN_advanced_manual-2025.pdf}},
+  note         = {Accessed 2026-11-21}
+}
+
+% Title page: "Play! Pok\'emon Tournament Rules Handbook, English version, last revision September 1, 2026";
+% document states it is owned and updated by The Pok\'emon Company International and Play! Pok\'emon.
+@misc{trh26,
+  author       = {{The Pok\'emon Company International}},
+  title        = {Play! {Pok\'emon} Tournament Rules Handbook, English version},
+  year         = {2026},
+  howpublished = {\url{https://www.pokemon.com/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-tournament-rules-handbook-en.pdf}},
+  note         = {Last revision 1 September 2026; accessed 2026-11-21}
+}
+
+% Title page: "Play! Pok\'emon Penalty Guidelines, Pok\'emon TCG, VG, and GO, English version, last revision September 1, 2026".
+@misc{pg26,
+  author       = {{The Pok\'emon Company International}},
+  title        = {Play! {Pok\'emon} Penalty Guidelines: Pok\'emon {TCG}, {VG}, and {GO}, English version},
+  year         = {2026},
+  howpublished = {\url{https://www.pokemon.com/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-penalty-guidelines-en.pdf}},
+  note         = {Last revision 1 September 2026; accessed 2026-11-21}
+}
+
+% Title page: "Play! Pok\'emon TCG Tournament Rules and Formats, Revised: November 1, 2012".
+% UNVERIFIED: publisher attribution (the PDF names none; hosted at assets.pokemon.com).
+@misc{tr2013,
+  author       = {{Play! Pok\'emon}},
+  title        = {Play! {Pok\'emon} {TCG} Tournament Rules and Formats},
+  year         = {2012},
+  howpublished = {\url{https://assets.pokemon.com/assets/cms/pdf/op/tournaments/2013/Play_Pokemon_TCG_Rules_and_Formats.pdf}},
+  note         = {Revised 1 November 2012; accessed 2026-11-21}
+}
+
+% Ruling 85: "Detention Gas" (Abilities), TPCi Rules Team 2019-06-06.
+% Ruling 449: "Forceful Tackle" (Attacks), Crimson Invasion FAQ 2017-10-20 / TPCi Rules Team 2017-11-02.
+% UNVERIFIED: site owner/publisher (pages name none; the rulings are credited to the TPCi Rules Team).
+@misc{compendium,
+  author       = {{Pok\'emon Rulings Compendium}},
+  title        = {Rulings 85 (Detention Gas) and 449 (Forceful Tackle)},
+  howpublished = {\url{https://compendium.pokegym.net/ruling/85/},
+                  \url{https://compendium.pokegym.net/ruling/449/}},
+  note         = {Rulings by the TPCi Rules Team, 2019-06-06 and 2017-11-02; accessed 2026-11-21}
+}
+
+% ---------------------------------------------------------------- data and software
+
+% Commit and date confirmed via the GitHub API on 2026-11-21 (committed 2026-11-08T21:34:25Z).
+% The repository page says the project is deprecated and its API is due to go offline on 2027-03-01.
+@misc{ptcgdata,
+  author       = {{PokemonTCG project}},
+  title        = {pokemon-tcg-data},
+  howpublished = {\url{https://github.com/PokemonTCG/pokemon-tcg-data}},
+  note         = {Commit 90f27d0e14cefe48ccb2b8922a7a356b2fcf0072 (2026-11-08); accessed 2026-11-21}
+}
+
+@misc{limitless,
+  author       = {{Limitless TCG}},
+  title        = {Card database and text search},
+  howpublished = {\url{https://limitlesstcg.com/cards}},
+  note         = {Search syntax: ``Card Search Syntax'', \url{https://limitlesstcg.com/cards/syntax};
+                  accessed 2026-11-21}
+}
+
+% Own repository; not re-checked here.
+@misc{lean-pokemon,
+  author       = {Davis, N. E.},
+  title        = {lean-pokemon: a {Lean} 4 model of the {Pok\'emon} Trading Card Game},
+  howpublished = {\url{https://github.com/sigilante/lean-pokemon}},
+  note         = {Branch master, commit 9465880}
+}
+
+% Replaced the Bulbapedia page (HTTP 403, never read) by the official announcement, which was read.
+% Page title "Mega Evolution Banned List and Rule Changes Announcement"; announced 2025-09-11,
+% effective 2025-10-10; text: "Flapple was banned in the Expanded format." Operated by TPCi.
+% Not cited in mss.tex at present.
+@misc{flapple,
+  author       = {{The Pok\'emon Company International}},
+  title        = {Mega Evolution Banned List and Rule Changes Announcement},
+  howpublished = {Pokemon.com, \url{https://www.pokemon.com/us/play-pokemon/about/mega-evolution/mega-evolution-banned-list-and-rule-changes-announcement}},
+  year         = {2025},
+  note         = {Announced 2025-09-11, effective 2025-10-10; accessed 2026-11-21}
+}
