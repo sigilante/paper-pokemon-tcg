@@ -326,7 +326,8 @@ record \lean{ko}. The game state holds the two players' states as \lean{cur} (to
 \lean{suddenDeath}, which stands for the tiebreaker game), the Stadium in play with its owner, and flags for the turn's Stadium play and use.
 
 Card text is represented by the inductive type \lean{Effect}, with forty constructors
-(Appendix~\ref{app:defs}). We call \lean{ite}, \lean{seq}, \lean{choice} and \lean{iter} the
+(Appendix~\ref{app:defs}); Figure~\ref{fig:cards} (Section~\ref{sec:importer}) shows three printed
+cards written in it. We call \lean{ite}, \lean{seq}, \lean{choice} and \lean{iter} the
 \emph{combinators} and the other thirty-six the \emph{primitives}. \lean{choice} covers coin flips
 and player decisions, and \lean{iter} ``flip until tails'' and ``as often as you like''. The
 primitives place damage counters, heal, and inflict or cure Special Conditions on Active or Benched
@@ -1081,9 +1082,84 @@ accounting by round.
 \paragraph{Caveats.} A translation that is knowingly loose carries a named caveat, tied to an entry
 of the Known gaps and labelled with its direction: the term \emph{allows more} outcomes than the
 printed card, \emph{forbids some} it allows, or differs in \emph{both} directions
-(Appendix~\ref{app:import} lists the largest). A card imported with caveats is in general neither an
+(Appendix~\ref{app:import} lists the largest; Figure~\ref{fig:cards} shows one exact card and two
+with caveats). A card imported with caveats is in general neither an
 over- nor an under-approximation of its printed card, so the imported pool supports no ``no deck
 can \dots'' argument without a check of the caveats involved.
+
+\begin{figure}[tp]
+\footnotesize\lstset{aboveskip=0.4em,belowskip=0.4em,showstringspaces=false}
+\noindent\textbf{(a) Stunfisk}, Surging Sparks 64 (\texttt{sv8-64}): Basic \pkmn{}, Lightning,
+110~HP. Attack Paralyzing Crackle, 50 damage: ``Flip a coin. If heads, your opponent's Active
+\pkmn{} is now Paralyzed, and discard an Energy from that \pkmn{}.''
+\begin{lstlisting}
+def sv8_64 : Card := .pokemon
+  { name := "Stunfisk", stage := .basic, evolvesFrom := none,
+    hp := 11, type := .lightning, retreat := 2, weakness := some .fighting,
+    resistance := none, ruleBox := .none, tera := false,
+    abilities := [],
+    attacks := [
+      { name := "Paralyzing Crackle", cost := [.lightning, .colorless], damage := 5,
+        effect := .choice (.seq (.inflict .paralyzed) (.ite (.countGe (.energy .opp .energy) 1) (.discardEnergy .opp .active .energy (.exactly 1)) .skip)) .skip,
+        gx := false }] }
+\end{lstlisting}
+\emph{Reading.} The 50 damage (\lean{damage := 5}) is done first; \lean{choice} is the coin: on
+one branch the opponent's Active \pkmn{} is Paralyzed (\lean{inflict}) and then (\lean{seq}), if it
+has an Energy attached (\lean{ite}, \lean{countGe}), one Energy is discarded from it; on the other,
+nothing (\lean{skip}). \emph{Status:} exact, under the global departures
+(Table~\ref{tab:departures}); the coin has no probability.
+
+\smallskip
+\noindent\textbf{(b) Waitress}, Ascended Heroes 215 (\texttt{me2pt5-215}): Supporter. ``Look at the
+top 6 cards of your deck and attach a Basic Energy card you find there to 1 of your \pkmn{}.
+Shuffle the other cards back into your deck.''
+\begin{lstlisting}
+def me2pt5_215 : Card := .trainer "Waitress" .supporter
+    (.look .own (.top 6) .basicEnergy (.most 1) (.attach .any) .shuffle)
+\end{lstlisting}
+\emph{Reading.} \lean{look .own (.top 6)} takes the player's top 6 cards as one window;
+\lean{.basicEnergy (.most 1)} takes one Basic Energy card from it, or none if it holds none (``up
+to 1'', \lean{.upTo 1}, would allow none even then); \lean{.attach .any} attaches it to one of the
+player's \pkmn{}; \lean{.shuffle} shuffles the rest into the deck. \emph{Status:}
+\texttt{failToFind} (forbids some). Not captured: only the player sees the six cards, and by usual
+practice, not stated in the 2026 rulebook, may fail to find ``a Basic Energy card you find there'';
+the model has no hidden information, so \lean{most 1} must take one when one is there.
+
+\smallskip
+\noindent\textbf{(c) Feraligatr}, Scarlet \& Violet Black Star Promos 89 (\texttt{svp-89}; reprinted
+as Temporal Forces 41): Stage~2 \pkmn{}, Water, 180~HP. Ability Torrential Heart: ``Once during your
+turn, you may put 5 damage counters on this \pkmn{}. If you do, during this turn, attacks used by
+this \pkmn{} do 120 more damage to your opponent's Active \pkmn{} (before applying Weakness and
+Resistance).'' Attack Giant Wave, 160 damage: ``During your next turn, this \pkmn{} can't use Giant
+Wave.''
+\begin{lstlisting}
+def svp_89 : Card := .pokemon
+  { name := "Feraligatr", stage := .stage2, evolvesFrom := some "Croconaw",
+    hp := 18, type := .water, retreat := 3, weakness := some .lightning,
+    resistance := none, ruleBox := .none, tera := false,
+    abilities := [
+      { name := "Torrential Heart", use := .once,
+        spot := none, cond := none,
+        effect := .seq (.self (.counters 5)) (.fx (.linger .own .now (.bonus 12))) }],
+    attacks := [
+      { name := "Giant Wave", cost := [.water, .water], damage := 16,
+        effect := .skip,
+        gx := false, selfLock := .this }] }
+\end{lstlisting}
+\emph{Reading.} Once a turn (\lean{.once}), Active or Benched (\lean{spot := none}), with no
+further condition, the Ability puts 5 damage counters on this \pkmn{} (\lean{.self}) and then
+(\lean{.seq}) stores for the player a bonus of 120 damage this turn (\lean{linger .own .now}), added
+at step~2, before Weakness and Resistance. Giant Wave does 160 and locks itself for the next turn
+(\lean{selfLock := .this}). Clause~4 of \lean{StoreSafe} constrains this write and admits it: once
+per turn, into this turn's slot. \emph{Status:} \texttt{perPokemon} (both), \texttt{selfBench}
+(allows more), \texttt{koBetweenSteps} (both). Not captured: ``attacks used by this \pkmn{} do 120
+more damage''; a stored modifier belongs to the player (Appendix~\ref{app:departures}, item~7), so
+whichever \pkmn{} attacks this turn gets it. On the Bench ``this \pkmn{}'' is any Benched \pkmn{},
+and a Knock Out check falls between the two steps.
+\caption{Three imported cards: the printed text shown, the generated term at \texttt{ec12a27}
+(verbatim; HP and damage in damage counters), a reading, and the status. An LLM agent chose the
+three and read each term against the printed text and the model's semantics; no human has.}\label{fig:cards}
+\end{figure}
 
 \paragraph{Numbers.} Table~\ref{tab:import} (Appendix~\ref{app:import}) gives the counts by kind of card; in all, 1,448 cards are imported (67.0\%), 1,063
 exactly and 385 with caveats, as 1,441 distinct terms (seven cards share the term of an earlier
@@ -1092,12 +1168,15 @@ Energy, which in a game of imported cards never finds one (Enhanced Hammer can n
 or Tool text of the two modelled shapes, all with caveats; 16 of the 44 Tools and 10 of the 36
 Stadiums are imported. The refusals divide into importer gaps, where the model expresses the text
 and a rule is missing (18 cards), model gaps (690) and deliberate refusals (5), by an LLM agent's
-reading of every blocker. Appendix~\ref{app:import} ranks the model gaps by the refused cards each would
+reading of every blocker. Magmortar (Journey Together 21), for one, is refused for one sentence,
+its Ability ``During \pkmn{} Checkup, put 3 more damage counters on your opponent's Burned \pkmn{}.''
+The importer's reason, ``Ability: triggered (Knock Out, damage, Checkup, an opponent's action or a
+move between spots)'', names a trigger on another event. Appendix~\ref{app:import} ranks the model gaps by the refused cards each would
 unlock; triggers of other events and Special Energy lead.
 
 \begin{theorem}[\lean{PokemonCards.Standard.storeSafe}, \lean{PokemonCards.Standard.xfinite} and
 companions]\label{thm:importer}
-Let \lean{all} be the list of the 1,441 imported terms. Then \lean{all} has no two equal terms
+Let \lean{all} be the list of the 1,441 imported terms (Figure~\ref{fig:cards} shows three). Then \lean{all} has no two equal terms
 (\lean{all\_nodup}), and every game whose cards are all in \lean{all} satisfies the five clauses of
 \lean{StoreSafe}, so Theorem~\ref{thm:xfinite} applies to it (\lean{xfinite},
 Appendix~\ref{app:defs}).
