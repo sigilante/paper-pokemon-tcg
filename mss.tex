@@ -1,6 +1,6 @@
 % mss.tex
 % Evidence: ../PLAN.md, ../survey/S0--S15, ../data/README.md, and lean-pokemon (branch master,
-% commit a1085e0, read from the read-only checkout ../lean-pokemon-ci). Every claim below
+% commit 830eb42, read from the read-only checkout ../lean-pokemon-ci). Every claim below
 % should trace to one of these. Lean statements are copied verbatim from the source; do not
 % edit them by hand -- re-copy them. The revision history of this manuscript is in git.
 
@@ -21,6 +21,8 @@
 \usepackage{hyperref}
 
 \setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={A Mechanized Model of the Pok\'emon TCG: Finite Quotients for Restricted Decks and a Counter-Machine Embedding},
+  pdfauthor={N. E. Davis (Sigilante)}}
 
 \newcommand{\pkmn}{Pok\'emon}
 \newcommand{\lean}[1]{\texttt{#1}}
@@ -81,7 +83,7 @@
     {⟩}{{$\rangle$}}1,
 }
 
-\title{Finite or Universal:\\ Mechanized Results for a Model of\\ the \pkmn{} Trading Card Game}
+\title{A Mechanized Model of the \pkmn{} TCG:\\ Finite Quotients for Restricted Decks\\ and a Counter-Machine Embedding}
 \author{N. E. Davis (Sigilante)}
 \date{}
 
@@ -94,10 +96,9 @@ stated assumptions about play. We ask whether the \pkmn{} Trading Card Game does
 of its rules, not the printed game. Three results are machine-checked. First, for tame decks (none
 stores a damage reduction or heals by damage done) started with no stored reduction, capping
 damage, Poison strength and stored modifiers at a bound from the cards leaves finitely many reachable
-values and keeps the moves. Second, for decks meeting five decidable sufficient conditions (Lean's
-predicate \emph{faithful}, named for how the model stores modifiers, not fidelity to cards), the
-stores stay bounded and the reachable states lie in finitely many classes of an exact-store
-bisimulation. None can be dropped from this proof: without any one, a witness start reaches
+values and keeps the moves. Second, for \emph{store-safe} decks, which meet five decidable
+sufficient conditions under which the stored damage modifiers stay bounded, the reachable states lie
+in finitely many classes of an exact-store bisimulation. None can be dropped from this proof: without any one, a witness start reaches
 infinitely many classes, though for four of them these are not shown to differ in play. Third,
 for decks no printed card supplies, every two-counter machine has a start from which a halt marker is
 reachable by some sequence of legal moves if and only if the machine halts; with Minsky's theorem
@@ -107,12 +108,13 @@ five conditions vacuously. No human has checked the translations. We conjecture 
 printed game is not Turing complete for decks with no recycling loop within a turn.
 \end{abstract}
 
-\noindent{\small\copyright{} 2026 N.~E.~Davis (Sigilante). This work is licensed under the Creative Commons Attribution 4.0 International licence (CC~BY~4.0), \url{https://creativecommons.org/licenses/by/4.0/}.
+\noindent{\small\copyright{} 2026 N.~E.~Davis (Sigilante). The author's own text, tables and figures are licensed under the Creative Commons Attribution 4.0 International licence (CC~BY~4.0), \url{https://creativecommons.org/licenses/by/4.0/}.
 The Lean model, the importer, the surveys and this manuscript were written by large language model
 agents directed by the author (``Provenance and use of AI'', Section~\ref{sec:provenance}).
-\pkmn{} and the \pkmn{} Trading Card Game are trademarks of their owners; this work is not
-affiliated with, sponsored or endorsed by them, and card names and quoted card and rulebook text are
-quoted for scholarly purposes.}
+\pkmn{}, the \pkmn{} Trading Card Game, card names and quoted card and rulebook text belong to
+their owners (Nintendo, Creatures Inc., GAME FREAK inc.\ and The \pkmn{} Company); they are quoted
+for research and commentary and are not licensed by the author. This work is not affiliated with,
+sponsored or endorsed by them.}
 
 %======================================================================
 \section{Introduction}\label{sec:intro}
@@ -143,8 +145,7 @@ The \pkmn{} TCG offers neither feature in an evident form. As far as our survey 
 creates a game object or brings a card in from outside the game, so the 120 cards of two 60-card
 decks are all the objects there are. The quantity closest to a register, the number of damage
 counters on a \pkmn{}, is capped by the Knock Out rule, and no card forces a player to attack. The
-question for \pkmn{} is therefore whether any uncapped quantity exists and can be read by card
-text.
+question for \pkmn{} is whether any uncapped quantity exists that card text can read.
 
 \subsection{Results}\label{sec:results-intro}
 
@@ -165,12 +166,12 @@ state and any state with the same clamp have the same moves up to the clamp
 (Theorem~\ref{thm:finite}). The \emph{exact-store clamp} caps only damage and Poison strength and is
 a two-way bisimulation for every deck (Theorem~\ref{thm:xbisim}).
 
-\paragraph{Faithful decks (machine-checked).} A start is \emph{faithful} if its cards satisfy five
-decidable clauses on loops, rest-of-game modifiers, recycling, Abilities and Stadiums
-(Definition~\ref{def:faithful}). The name is that of the Lean predicate \lean{Faithful} and refers
-to how the model stores modifiers, not to fidelity to the rules or to printed cards. From a faithful
-start the stores stay bounded and the reachable states fall into finitely many exact-store classes
-(Theorem~\ref{thm:xfinite}). The clauses are sufficient conditions, not necessary ones, but none can
+\paragraph{Store-safe decks (machine-checked).} A start is \emph{store-safe}\footnote{Earlier
+versions of this paper and of the Lean development called the predicate \lean{Faithful}.} if its
+cards meet five decidable sufficient conditions under which the stored damage modifiers stay
+bounded, on loops, rest-of-game modifiers, recycling, Abilities and Stadiums
+(\lean{StoreSafe}, Definition~\ref{def:storesafe}). From a store-safe start the stores stay bounded and the reachable states fall into finitely many exact-store classes
+(Theorem~\ref{thm:xfinite}). They are not necessary, but none can
 be dropped from this proof: without any one, a witness start in which each player holds two to five
 cards, nearly all invented, has infinitely many exact-store classes (Table~\ref{tab:clauses}). For
 clauses 1, 3, 4 and 5 the extra states are not shown to differ in play; for clause 2 the universality
@@ -182,7 +183,7 @@ printed card supplies, the same model simulates two-counter machines: for every 
 a well-formed start from which a \emph{halt marker} is reachable by some sequence of legal moves of
 the two players if and only if $M$ halts (Theorem~\ref{thm:universal}). The ``if'' direction is
 cooperative reachability; the ``only if'' direction holds over all play. The starts satisfy the
-other four clauses of faithfulness and, whenever the machine's first instruction is not
+other four clauses of \lean{StoreSafe} and, whenever the machine's first instruction is not
 \lean{halt}, violate the second, which lets an attack write a rest-of-game bonus or reduction only
 if it is a GX attack, usable once per game. With Minsky's theorem \cite{minsky}, which we cite and do not
 formalise, reachability of the halt marker over these starts is undecidable.
@@ -194,7 +195,7 @@ Energy (an assumption, Section~\ref{sec:standard}), it translates 1,233, 910 \em
 card-specific caveat; the model's global departures, Table~\ref{tab:departures}, still apply to every
 card) and 323 with named caveats (a known looseness of the translation, with its direction), and
 refuses 928, each with a reason. Lean proves that every game built only from the imported terms
-meets the five clauses of the predicate \lean{Faithful}, so Theorem~\ref{thm:xfinite} applies to it
+meets the five clauses of \lean{StoreSafe}, so Theorem~\ref{thm:xfinite} applies to it
 (Theorem~\ref{thm:importer}). The clauses hold there vacuously, since nothing they forbid occurs, so
 the theorem's content for these cards is mainly the bounds on derived HP and damage and the store
 bound for the 27 terms that write a carried modifier. It covers the cards as translated. No Lean statement ties a term to its card; LLM agents run
@@ -218,11 +219,11 @@ Claim & Decks & Evidence & Where \\
 Legal play permutes the cards; derived HP is bounded by the cards; the repeated Knock Out check, with its triggers, ends & all & machine-checked & Sec.~\ref{sec:moves}, Thm.~\ref{thm:perm} \\
 Clamps of reachable states lie in one finite list; the clamp is a bisimulation for moves & tame, no stored reduction at the start & machine-checked & Thm.~\ref{thm:finite} \\
 States with the same exact-store clamp have the same moves, both ways & all & machine-checked & Thm.~\ref{thm:xbisim} \\
-Reachable states lie in finitely many exact-store classes & faithful & machine-checked & Thm.~\ref{thm:xfinite} \\
+Reachable states lie in finitely many exact-store classes & store-safe & machine-checked & Thm.~\ref{thm:xfinite} \\
 No clause can be dropped from this proof (a difference in play shown only for clause 2) & one witness each & machine-checked & Table~\ref{tab:clauses} \\
 Halt marker reachable by some legal sequence iff the machine halts & built for each machine & machine-checked & Thm.~\ref{thm:universal} \\
 Reachability of the halt marker over those starts is undecidable & built for each machine & reduction machine-checked; Minsky cited & Sec.~\ref{sec:counter-what} \\
-Every game built only from the 1,233 imported cards meets the five clauses of \lean{Faithful}, vacuously & imported Standard cards & machine-checked & Thm.~\ref{thm:importer} \\
+Every game built only from the 1,233 imported cards meets the five clauses of \lean{StoreSafe}, vacuously & imported Standard cards & machine-checked & Thm.~\ref{thm:importer} \\
 Each imported term says what its card says, up to its caveats & imported Standard cards & read by LLM agents; not verified & Sec.~\ref{sec:importer} \\
 No unbounded store that persists across turns and is read beyond a yes-or-no test & English card pool & surveyed & Sec.~\ref{sec:survey} \\
 Finiteness for the 928 refused Standard cards and outside Standard & --- & open & Sec.~\ref{sec:open} \\
@@ -306,7 +307,7 @@ Whether HP, markers and lingering effects are bounded is a question about card t
 %======================================================================
 
 The model is the Lean~4 development \cite{lean-pokemon}, branch \texttt{master}, commit
-\texttt{a1085e0} (the audited commit), built with core Lean v4.36.0 and no libraries. HP and damage
+\texttt{830eb42} (the audited commit), built with core Lean v4.36.0 and no libraries. HP and damage
 are measured in damage counters. All Lean text in this paper is copied from that commit;
 docstrings, comments and \lean{deriving} clauses are omitted. Appendix~\ref{app:defs} has further
 definitions and Appendix~\ref{app:departures} every known departure from the rulebook, as the
@@ -478,7 +479,7 @@ Items; amounts add up. \lean{endTurn} shifts the store: this turn's modifiers ex
 move one turn closer. Modifiers belong to a player, not to one \pkmn{}, and \lean{linger} is usable
 any number of times and inside \lean{iter}, so bonuses and reductions accumulate without limit, and
 an ordinary attack can grant a rest-of-game modifier every turn. We chose this over-approximation so
-that the model does not rest on an empirical bound on printed modifiers; the faithful theorem
+that the model does not rest on an empirical bound on printed modifiers; the store-safe theorem
 recovers a bound from a condition on the deck. The damage step follows the rulebook
 \cite[p.~20]{rb-26}:
 \begin{lstlisting}
@@ -624,8 +625,8 @@ Knock Outs in Trainer and Ability effects after each primitive, immediate promot
 Static effects add up with no stacking limit; no set HP, Bench size or locks & restricts expression \\
 Markers as flags, under an assumption about the card pool & load-bearing (the assumption) \\
 No test on Poison strength, HP or Benched damage; history only the one-turn record & load-bearing (the Poison test); otherwise restricts expression \\
-Lingering modifiers stack without limit, belong to a player and survive evolution & load-bearing; met by tameness or faithfulness \\
-No return of a card from play, no attacking twice, no extra turns & load-bearing for the faithful bound \\
+Lingering modifiers stack without limit, belong to a player and survive evolution & load-bearing; met by tame or store-safe decks \\
+No return of a card from play, no attacking twice, no extra turns & load-bearing for the store bound \\
 Bench damage without modifiers or static prevention; recoil as damage counters; ``this \pkmn{}'' after a mid-effect Knock Out & not classified (allows more and forbids some) \\
 One \lean{used} flag per \pkmn{}, shared with Tool-given Abilities & not classified (forbids some; the store bound is not proved for a flag per Ability) \\
 An evolution line that prints the same once-per-turn Ability can use it twice in a turn & neutral or harder (allows more; no ruling checked) \\
@@ -640,7 +641,7 @@ Special Energy, per-\pkmn{} modifiers, other triggers, devolution and Legendary 
 
 \paragraph{Load-bearing departures.} What is load-bearing about markers is the survey's finding
 that cards only place one, remove all, and test for any. Lingering modifiers stack without limit,
-and each finiteness theorem meets this by a hypothesis on the deck. The faithful bound also rests on
+and each finiteness theorem meets this by a hypothesis on the deck. The store bound also rests on
 the absence of returns from play, repeated attacks and extra turns. No effect tests Poison
 strength: both clamps cap it, and a test against a larger number would observe the excess; no part
 of our survey searched for such a test. HP modifiers, whose omission would most directly ease
@@ -797,7 +798,7 @@ $k \ge 2$ with an attack that uses \lean{drain} (Appendix~\ref{app:defs}).
 \noindent The damage done is the difference of two quantities that can each grow without limit, and
 a cap on each separately cannot preserve it.
 
-\subsection{Exact stores and faithful decks}\label{sec:faithful}
+\subsection{Exact stores and store-safe decks}\label{sec:storesafe}
 
 The \emph{exact-store clamp} \lean{xclamp K} caps damage and Poison strength on every \pkmn{} in
 play at $K$ and keeps the stores exact (\lean{GameState.xclampAt}, Appendix~\ref{app:defs}). Every
@@ -819,15 +820,14 @@ bonus and a reduction of at most $B$ (\lean{BoundedStores B}), the exact-store c
 finite list (\lean{Reach.xfinite\_bounded}). A condition on the deck keeps every reachable state in
 that part.
 
-\begin{definition}[\lean{GameState.Faithful}]\label{def:faithful}
-A state is \emph{faithful} if its cards satisfy five clauses:
+\begin{definition}[\lean{GameState.StoreSafe}]\label{def:storesafe}
+A state is \emph{store-safe} if its cards satisfy five clauses:
 \begin{lstlisting}
-def GameState.Faithful (g : GameState) : Prop :=
+def GameState.StoreSafe (g : GameState) : Prop :=
   g.LoopFree ∧ g.GXOnly ∧ g.RecycleSafe ∧ g.AbilitySafe ∧ g.StadiumSafe
 \end{lstlisting}
 \end{definition}
-\noindent (The name is that of the Lean predicate and refers to how the model stores modifiers; it
-says nothing about the model's fidelity to the rules or to printed cards.) An effect \emph{writes} if it contains a damage bonus or reduction.
+\noindent An effect \emph{writes} if it contains a damage bonus or reduction.
 The clauses quantify over the cards of both players together (definitions in
 Appendix~\ref{app:defs}): (1)~\lean{LoopFree}: no damage bonus or reduction under \lean{iter};
 (2)~\lean{GXOnly}: an attack, printed or given by a Tool, that writes a rest-of-game bonus or
@@ -841,8 +841,8 @@ triggered Abilities and Stadium effects may write carried modifiers and recycle 
 static effects write and recycle nothing. Triggered Abilities are not free recyclers in clause
 3(a): they fire only after the turn's attack.
 
-\begin{theorem}[\lean{Faithful.reach\_boundedStores}, \lean{Faithful.xfinite}]\label{thm:xfinite}
-From a faithful start $g_0$, well formed or not, every reachable state has every slot of both stores
+\begin{theorem}[\lean{StoreSafe.reach\_boundedStores}, \lean{StoreSafe.xfinite}]\label{thm:xfinite}
+From a store-safe start $g_0$, well formed or not, every reachable state has every slot of both stores
 bounded by \lean{storeBound g$_0$}; the exact-store clamps at $K = {}$\lean{Enum.bound
 g$_0$.allCards} of the reachable states lie in one finite list; and the exact-store clamp is a
 two-way bisimulation along reachable states.
@@ -853,9 +853,9 @@ def storeBound (g₀ : GameState) : Nat :=
     6 * cardsStQ (cardsAmt g₀.allCards) g₀.allCards +
     3 * cardsAtkAmt g₀.allCards
 
-theorem reach_boundedStores {g₀ g : GameState} (hF : g₀.Faithful) (h : Reach g₀ g) :
+theorem reach_boundedStores {g₀ g : GameState} (hF : g₀.StoreSafe) (h : Reach g₀ g) :
     g.BoundedStores (storeBound g₀)
-theorem xfinite {g₀ : GameState} (hF : g₀.Faithful) :
+theorem xfinite {g₀ : GameState} (hF : g₀.StoreSafe) :
     (∃ L : List GameState, ∀ g, Reach g₀ g → g.xclamp (Enum.bound g₀.allCards) ∈ L) ∧
       ∀ g₁ g₂, Reach g₀ g₁ →
         g₁.xclamp (Enum.bound g₀.allCards) = g₂.xclamp (Enum.bound g₀.allCards) →
@@ -864,7 +864,7 @@ theorem xfinite {g₀ : GameState} (hF : g₀.Faithful) :
         (∀ g₂', Move g₂ g₂' → ∃ g₁', Move g₁ g₁' ∧
           g₂'.xclamp (Enum.bound g₀.allCards) = g₁'.xclamp (Enum.bound g₀.allCards))
 \end{lstlisting}
-(In namespace \lean{Pokemon.Faithful}.)
+(In namespace \lean{Pokemon.StoreSafe}.)
 \end{theorem}
 
 \paragraph{The store bound.} Write $S$ for the start stores, $P$ for the Trainer amounts of the
@@ -907,14 +907,14 @@ holds for every $K$. The other four are in Appendix~\ref{app:defs}.)
 Clause & Negative theorem & Witness \\
 \midrule
 1 \lean{LoopFree} & \lean{LoopFreeNeeded.iter\_writer\_breaks\_bound} & an Item \lean{iter (linger .own .now (.bonus 1))} \\
-2 \lean{GXOnly} & \lean{Faithful.xclamp\_not\_finite}, \lean{Counter.universal} & the two-counter starts (Section~\ref{sec:linger}): infinitely many classes for \lean{countUp}, about representation; halt-marker reachability, about play \\
+2 \lean{GXOnly} & \lean{StoreSafe.xclamp\_not\_finite}, \lean{Counter.universal} & the two-counter starts (Section~\ref{sec:linger}): infinitely many classes for \lean{countUp}, about representation; halt-marker reachability, about play \\
 3 \lean{RecycleSafe} & \lean{Recycle.recycling\_breaks\_bound} & two Items that return each other and an Item modelled on Iron Defender (a carried reduction of 3), within one turn \\
 3 (unlimited Ability) & \lean{Abilities.unlimited\_recycler\_breaks\_bound} & an unlimited Ability that returns the Iron Defender-like Item \\
 4 \lean{AbilitySafe} & \lean{Abilities.unlimited\_writer\_breaks\_bound} & an unlimited Ability that writes a carried reduction \\
 5 \lean{StadiumSafe} & \lean{Stadiums.stadium\_writer\_breaks\_bound} & a Stadium effect that writes a rest-of-game bonus, used by both players each turn \\
 \bottomrule
 \end{tabularx}
-\caption{The five clauses of \lean{Faithful} and the theorems showing that none can be dropped
+\caption{The five clauses of \lean{StoreSafe} and the theorems showing that none can be dropped
 from this proof. Every negative theorem except clause 2's asserts in its statement the other four
 clauses. A result \emph{about representation} shows infinitely many reachable states that nothing in
 play is shown to tell apart; one \emph{about play} shows states that legal play tells apart.}\label{tab:clauses}
@@ -929,13 +929,13 @@ states are not shown to differ in play. Whether unrestricted recycling yields a 
 open. For clause 2 the two-counter starts satisfy clauses 1, 3, 4 and 5 and, when the machine's
 first instruction is not \lean{halt}, violate clause 2 (Theorem~\ref{thm:sharp}); for the machine
 \lean{countUp} the exact-store clamps of the reachable states lie in no finite list
-(\lean{Faithful.xclamp\_not\_finite}), about representation, since \lean{countUp} never reads its
+(\lean{StoreSafe.xclamp\_not\_finite}), about representation, since \lean{countUp} never reads its
 register; the result about play is that halt-marker reachability encodes halting
 (Theorem~\ref{thm:universal}). The clauses are sufficient, not necessary, for a
 finite quotient: tame decks that violate clause 2 have a finite clamped game
 (Theorem~\ref{thm:finite}). Clause 3 is weaker for Stadiums, and a deck with a Stadium that returns
-an Iron Defender-like Item to either player every turn is faithful
-(\lean{Stadiums.stadium\_recycler\_faithful}).
+an Iron Defender-like Item to either player every turn is store-safe
+(\lean{Stadiums.stadium\_recycler\_storeSafe}).
 
 \subsection{Consequences and scope}\label{sec:finite-scope}
 
@@ -945,7 +945,7 @@ quotient is coarser. Theorem~\ref{thm:xfinite} allows stored reductions and \lea
 what the five clauses forbid, and its quotient is finer. Neither class contains the other.
 
 \begin{corollary}[argued, not mechanized]\label{cor:counter}
-Fix a start $g_0$ that is \lean{Fit} at \lean{bound g$_0$.allCards} or faithful. If there is an
+Fix a start $g_0$ that is \lean{Fit} at \lean{bound g$_0$.allCards} or store-safe. If there is an
 injective map from the configurations reachable by a machine $M$ to classes of states reachable from
 $g_0$, under the clamp or the exact-store clamp respectively, then $M$ has finitely many reachable
 configurations. In particular no such start simulates, in this sense, a two-counter machine with
@@ -953,7 +953,7 @@ infinitely many reachable configurations.
 \end{corollary}
 \noindent The proof is Theorem~\ref{thm:finite} or~\ref{thm:xfinite}. We conjecture that
 reachability questions that depend only on the clamp are decidable for tame decks, and with the
-exact-store quotient for faithful decks; neither the finite list nor the quotient's moves are
+exact-store quotient for store-safe decks; neither the finite list nor the quotient's moves are
 computed. These theorems concern the states between moves (inside one attack's effect damage is
 unbounded and readable, Theorem~\ref{thm:notsim}); the finite list and the cap depend on $g_0$; and
 \lean{Reach.perm} conserves the cards of both players together, not each player's.
@@ -1035,8 +1035,8 @@ recycling, Abilities, triggers, Tools, Stadiums or static effects.
 
 \subsection{Sharpness and what follows}\label{sec:counter-sharp}\label{sec:counter-what}
 
-\begin{theorem}[\lean{Faithful.counter\_not\_gxOnly} and four companions]\label{thm:sharp}
-Every two-counter start satisfies clauses 1, 3, 4 and 5 of \lean{Faithful}, and violates clause 2
+\begin{theorem}[\lean{StoreSafe.counter\_not\_gxOnly} and four companions]\label{thm:sharp}
+Every two-counter start satisfies clauses 1, 3, 4 and 5 of \lean{StoreSafe}, and violates clause 2
 whenever the machine's first instruction is not \lean{halt}.
 \begin{lstlisting}
 theorem counter_loopFree (M : Machine) (a b : Nat) : (start M a b).LoopFree
@@ -1047,9 +1047,9 @@ theorem counter_not_gxOnly (M : Machine) (a b : Nat) (h : M.instr 0 ≠ .halt) :
     ¬ (start M a b).GXOnly
 \end{lstlisting}
 \end{theorem}
-\noindent \lean{Faithful.dichotomy} packages these facts with Theorem~\ref{thm:xfinite} and the
+\noindent \lean{StoreSafe.dichotomy} packages these facts with Theorem~\ref{thm:xfinite} and the
 halting equivalence. Despite its Lean name it is a sharpness result for clause 2, not a partition of
-decks: nothing is proved about other decks that are not faithful, and tame decks that violate
+decks: nothing is proved about other decks that are not store-safe, and tame decks that violate
 clause 2 are finite by Theorem~\ref{thm:finite}.
 
 \paragraph{Undecidability.} The map $M \mapsto{}$\lean{start M a b} is an explicit definition, and
@@ -1062,7 +1062,7 @@ that respects the halt question exists, non-constructively.
 \paragraph{Representation.} For the machine \lean{countUp}, whose one instruction increments a
 register it never reads, no finite list contains, up to any equivalence fine enough to recover the
 encoded configuration, every reachable state (\lean{Counter.not\_finite\_up\_to},
-\lean{Faithful.xclamp\_not\_finite}). The extra states differ only in a reduction nothing observes:
+\lean{StoreSafe.xclamp\_not\_finite}). The extra states differ only in a reduction nothing observes:
 representations of configurations are infinite, and whether a finite bisimulation quotient exists
 for this deck is open.
 
@@ -1109,7 +1109,7 @@ The pool has 3,402 card records. It lacks GX attacks, VSTAR Powers, rest-of-game
 turns, markers and the Lost Zone, so the universal construction's key ingredient does not occur in
 it. It has 34 cards that carry a damage reduction into the opponent's turn, such as the Item Iron
 Defender, and five attacks that heal by the damage done, so its decks are not tame in general and
-the faithful theorem is the one that bears on them. It has four \pkmn{} that can attack twice
+the store-safe theorem is the one that bears on them. It has four \pkmn{} that can attack twice
 (through the Ability Festival Lead with the Stadium Festival Grounds) and Abilities that return a
 \pkmn{} from play.
 
@@ -1159,7 +1159,7 @@ and~\ref{sec:vocab2} carry their own caveats: the \lean{damaged} decision and ``
 Knock Out record (7, both), unrecorded Checkup Knock Outs and \lean{movedUp} after a promotion (3
 each, forbids some), a Stadium's effect ignored with step 5 (11, both), static prevention in the
 Active Spot only (5, both), ``any amount'' bounded by 60 cards (3, forbids some) and ``has an
-Ability'' blind to Tools (2, allows more). A card imported with caveats is in general neither an over- nor an
+Ability'' blind to Tools (3, both). A card imported with caveats is in general neither an over- nor an
 under-approximation of its printed card, so the imported pool supports no ``no deck can \dots''
 argument without a check of the caveats involved.
 
@@ -1193,15 +1193,15 @@ printing), and 928 refused. Of the 315 \pkmn{} with an Ability, 92 are imported;
 triggered Ability or Tool text of the two modelled shapes, all with caveats; 14 of the 44 Tools and 7
 of the 36 Stadiums are imported.
 
-\begin{theorem}[\lean{PokemonCards.Standard.faithful}, \lean{PokemonCards.Standard.xfinite} and
+\begin{theorem}[\lean{PokemonCards.Standard.storeSafe}, \lean{PokemonCards.Standard.xfinite} and
 companions]\label{thm:importer}
 Let \lean{all} be the list of the 1,227 imported terms. Then \lean{all} has no two equal terms
 (\lean{all\_nodup}), and every game whose cards are all in \lean{all} satisfies the five clauses of
-\lean{Faithful}, so Theorem~\ref{thm:xfinite} applies to it (\lean{xfinite},
+\lean{StoreSafe}, so Theorem~\ref{thm:xfinite} applies to it (\lean{xfinite},
 Appendix~\ref{app:defs}).
 \begin{lstlisting}
-theorem faithful (g : GameState) (hg : ∀ x ∈ g.allCards, x ∈ all) : g.Faithful :=
-  faithful_of all_ok recSafe g hg
+theorem storeSafe (g : GameState) (hg : ∀ x ∈ g.allCards, x ∈ all) : g.StoreSafe :=
+  storeSafe_of all_ok recSafe g hg
 
 theorem hpOf_le_120 (g : GameState) (hg : ∀ x ∈ g.allCards, x ∈ all) (hn : g.allCards.length ≤ 120)
     {w : Whose} {sp : Spot} {p : InPlay} (hp : g.In w sp p) : g.hpOf w sp p ≤ 290438
@@ -1216,7 +1216,7 @@ holds over the whole list (\lean{recSafe}), and every imported trigger fires whe
 allows, with an effect in the trigger fragment (\lean{triggers\_fire}). The counts are
 \lean{all\_length}, \lean{notImported\_length} and \lean{pool\_size}, arithmetic on list lengths.
 \lean{hpOf\_le\_120} is a crude bound on the model's terms, not a claim about printed HP. Imported
-decks are faithful but not in general tame: \lean{untame} lists 28 imported terms that use
+decks are store-safe but not in general tame: \lean{untame} lists 28 imported terms that use
 \lean{drain} or store a reduction, so Theorem~\ref{thm:finite} is not claimed for them.
 
 \paragraph{What the clauses do for the imported pool.} For the imported terms the five clauses hold
@@ -1234,7 +1234,7 @@ slots, the absence of \lean{iter} and of Stadium and Tool writes, and the recycl
 script over the generated files, which reproduces the 27 names of \lean{writers}.
 
 \paragraph{Scope.} Lean proves, about the generated terms, that every game built only from them meets
-the five clauses of \lean{Faithful} and so has a finite exact-store quotient. Three links lie outside
+the five clauses of \lean{StoreSafe} and so has a finite exact-store quotient. Three links lie outside
 Lean. The first is the reading: no Lean statement ties a term to its card. The LLM agents of the
 rounds above compared the translations with the printed records; they found three translations that
 allowed outcomes their cards do not and four attacks with an Energy discard after the damage
@@ -1247,7 +1247,7 @@ the whole Standard pool. No imported Item writes a modifier, because the two Sta
 Iron Defender and Premium Power Pro, are refused for their type-restricted modifiers. A hand-written
 probe adds over-approximated terms for both, and Lean proves that every game whose cards come from
 the imported terms and these two satisfies all five clauses
-(\lean{OverApprox.faithful\_withOverItems}); with the recycling analysis of
+(\lean{OverApprox.storeSafe\_withOverItems}); with the recycling analysis of
 Section~\ref{sec:standard} this supports the clause for Standard but does not prove it. The 928
 refused cards, and every deck that mixes one in, lie outside the theorem.
 
@@ -1380,8 +1380,7 @@ Their source sits behind a subscription login, so we cannot compare definitions.
 
 \paragraph{The finite side.} Two finiteness results hold for a Lean model of the \pkmn{} TCG.
 Tame decks with no stored reduction at the start have a finite clamped game with the same moves.
-Faithful decks (a Lean predicate's name, not fidelity to cards), which meet five decidable
-sufficient conditions, keep their stores bounded and have finitely many classes of a two-way
+Store-safe decks, which meet five decidable sufficient conditions, keep their stores bounded and have finitely many classes of a two-way
 bisimulation that keeps every modifier exact. None of the conditions can be dropped from this
 proof, though only for the second is the difference shown in play.
 
@@ -1393,7 +1392,7 @@ second condition cannot be dropped, not that every deck violating it is universa
 theorem, cited and not formalised, reachability of the halt marker over these starts is undecidable.
 
 \paragraph{The printed card pool.} Every game built only from the 1,233 imported cards of the
-Standard pool meets the five clauses of \lean{Faithful}, vacuously, a kernel-checked fact about the
+Standard pool meets the five clauses of \lean{StoreSafe}, vacuously, a kernel-checked fact about the
 generated terms. No proof ties a term to its card; LLM agents compared the terms with the printed
 cards, and no human has. The other 928 Standard cards and everything outside Standard are
 open. A survey of 20,776 English card records found no unbounded store that persists across turns
@@ -1409,19 +1408,14 @@ census scripts are not public.
 
 \paragraph{Provenance and use of AI.}\label{sec:provenance} The Lean model, the importer, the
 surveys and this manuscript were written by large language model agents (Anthropic's Claude models)
-directed by the author, who set the questions and the scope and made the decisions. The reviews
-called ``Wizard'', ``Grammarian'' and similar in the project are further runs of such agents with
-reviewer prompts, not human referees. No human has read the card translations against the printed
-cards. The proofs are checked by the Lean kernel, which is the only verification independent of
-this process.
-
-\paragraph{Acknowledgement.} LLM agents run by the author with reviewer prompts reviewed the Lean
-development and this manuscript adversarially.
+directed by the author, who set the questions and the scope and made the decisions. Further runs
+of such agents with reviewer prompts (called ``Wizard'', ``Grammarian'' and similar in the project),
+not human referees, reviewed the Lean development and this manuscript adversarially. No human has
+read the card translations against the printed cards. The proofs are checked by the Lean kernel,
+which is the only verification independent of this process.
 
 \bibliographystyle{plain}
-{\small
 \bibliography{refs}
-}
 
 \appendix
 
@@ -1805,7 +1799,7 @@ def InPlay.clampWith (K : Nat) (c : Cap) (p : InPlay) : InPlay :=
 theorem Move.clamp_sim {k : Nat} {g₁ g₁' g₂ : GameState} (hF : g₁.Fit k) (h : Move g₁ g₁')
     (hc : g₁.clamp k = g₂.clamp k) : ∃ g₂', Move g₂ g₂' ∧ g₁'.clamp k = g₂'.clamp k
 \end{lstlisting}
-The clauses of \lean{Faithful} (Definition~\ref{def:faithful}):
+The clauses of \lean{StoreSafe} (Definition~\ref{def:storesafe}):
 \begin{lstlisting}
 def Effect.loopFree : Effect → Bool
   | .ite _ a b => a.loopFree && b.loopFree
@@ -1901,11 +1895,11 @@ theorem xfinite (g₀ : GameState) (hg : ∀ x ∈ g₀.allCards, x ∈ all) :
           g₁'.xclamp (Enum.bound g₀.allCards) = g₂'.xclamp (Enum.bound g₀.allCards)) ∧
         (∀ g₂', Move g₂ g₂' → ∃ g₁', Move g₁ g₁' ∧
           g₂'.xclamp (Enum.bound g₀.allCards) = g₁'.xclamp (Enum.bound g₀.allCards)) :=
-  Faithful.xfinite (faithful g₀ hg)
+  StoreSafe.xfinite (storeSafe g₀ hg)
 
-theorem faithful_withOverItems (g : GameState)
+theorem storeSafe_withOverItems (g : GameState)
     (hg : ∀ x ∈ g.allCards, x ∈ Standard.all ++ [ironDefenderOver, premiumPowerProOver]) :
-    g.Faithful
+    g.StoreSafe
 \end{lstlisting}
 
 %======================================================================
@@ -1965,15 +1959,15 @@ The clamp is a simulation inside one attack's effect & false (machine-checked) &
 Tame decks: finite list of clamps; two-way bisimulation & machine-checked & Thm.~\ref{thm:finite} \\
 For every cap, a deck with a reduction ($k\ge 3$) or \lean{drain} ($k\ge 2$) defeats the clamp & machine-checked & Thm.~\ref{thm:breaks} \\
 Every deck: the exact-store clamp is a two-way bisimulation & machine-checked & Thm.~\ref{thm:xbisim} \\
-Faithful starts: stores bounded by \lean{storeBound}; finite list; bisimulation & machine-checked & Thm.~\ref{thm:xfinite} \\
+Store-safe starts: stores bounded by \lean{storeBound}; finite list; bisimulation & machine-checked & Thm.~\ref{thm:xfinite} \\
 Without clause 1, 3, 4 or 5 the stores are unbounded and the exact-store classes infinite & machine-checked (representation) & Table~\ref{tab:clauses} \\
 Without clause 2 the exact-store classes can be infinite (\lean{countUp}); halt-marker reachability encodes halting & machine-checked (representation; play) & Table~\ref{tab:clauses} \\
 No witness start of these theorems or of Thm.~\ref{thm:universal} is a legal 60-card deck & by definition & Sec.~\ref{sec:negatives} \\
-A Stadium that returns a writer every turn is faithful & machine-checked & Sec.~\ref{sec:negatives} \\
+A Stadium that returns a writer every turn is store-safe & machine-checked & Sec.~\ref{sec:negatives} \\
 Unrestricted recycling yields a counter machine & open & Sec.~\ref{sec:negatives} \\
-Neither the tame nor the faithful class contains the other & argued & Sec.~\ref{sec:finite-scope} \\
-Tame or faithful starts simulate no two-counter machine with infinitely many reachable configurations & argued & Cor.~\ref{cor:counter} \\
-Reachability is decidable for tame and for faithful decks & conjectured & Sec.~\ref{sec:finite-scope} \\
+Neither the tame nor the store-safe class contains the other & argued & Sec.~\ref{sec:finite-scope} \\
+Tame or store-safe starts simulate no two-counter machine with infinitely many reachable configurations & argued & Cor.~\ref{cor:counter} \\
+Reachability is decidable for tame and for store-safe decks & conjectured & Sec.~\ref{sec:finite-scope} \\
 \multicolumn{3}{@{}l}{\emph{The universal side (decks that no printed card supplies)}} \\
 Halt marker reachable by some legal sequence iff the machine halts; soundness over all play & machine-checked & Thm.~\ref{thm:universal} \\
 The starts satisfy clauses 1, 3, 4, 5 and violate clause 2 if the first instruction is not \lean{halt} & machine-checked & Thm.~\ref{thm:sharp} \\
@@ -1982,7 +1976,7 @@ For one witness, states are infinite up to any equivalence that recovers the con
 \multicolumn{3}{@{}l}{\emph{The imported cards}} \\
 1,227 distinct terms, 6 shared, 928 refused; the three list lengths sum to 2161 & machine-checked (2161 is a literal; that it is the pool's size is checked outside Lean) & Sec.~\ref{sec:importer} \\
 The lists partition the pool & checked outside Lean & Sec.~\ref{sec:importer} \\
-Every game built only from imported terms meets the five clauses of \lean{Faithful}; Thm.~\ref{thm:xfinite} applies & machine-checked & Thm.~\ref{thm:importer} \\
+Every game built only from imported terms meets the five clauses of \lean{StoreSafe}; Thm.~\ref{thm:xfinite} applies & machine-checked & Thm.~\ref{thm:importer} \\
 The clauses hold vacuously there: 27 carried writers, none rest-of-game or in an Ability, Stadium or Item; no \lean{iter} & machine-checked (listings); counted by script (slots, \lean{iter}, Stadiums) & Sec.~\ref{sec:importer} \\
 No imported Stadium or Tool is inert; imported triggers fire in the fragment; 28 terms untame & machine-checked & Sec.~\ref{sec:importer} \\
 The same with over-approximated Iron Defender and Premium Power Pro & machine-checked & Sec.~\ref{sec:importer} \\
