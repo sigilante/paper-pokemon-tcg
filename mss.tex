@@ -1,6 +1,6 @@
 % mss.tex
 % Evidence: ../PLAN.md, ../survey/S0--S19, ../data/README.md, and lean-pokemon (branch master,
-% commit 736cc1c, read from the read-only checkout ../lean-pokemon-ci). Every claim below
+% commit ec12a27, read from the read-only checkout ../lean-pokemon-ci). Every claim below
 % should trace to one of these. Lean statements are copied verbatim from the source; do not
 % edit them by hand -- re-copy them. The revision history of this manuscript is in git.
 
@@ -302,7 +302,7 @@ Whether HP, markers and lingering effects are bounded is a question about card t
 %======================================================================
 
 The model is the Lean~4 development \cite{lean-pokemon}, branch \texttt{master}, commit
-\texttt{736cc1c} (the audited commit), built with core Lean v4.36.0 and no libraries. HP and damage
+\texttt{ec12a27} (the audited commit), built with core Lean v4.36.0 and no libraries. HP and damage
 are measured in damage counters. All Lean text in this paper is copied from that commit;
 docstrings, comments and \lean{deriving} clauses are omitted. Appendix~\ref{app:defs} has further
 definitions and Appendix~\ref{app:departures} every known departure from the rulebook, as the
@@ -490,16 +490,19 @@ on the deck. The damage step follows the rulebook \cite[p.~20]{rb-26}:
 \begin{lstlisting}
 def dealtBy (n : Nat) (weak : Bool) (resist : Nat) (own opp : Store) : Nat :=
   if n = 0 then 0 else if opp.live.prevent then 0 else
-    if n + own.live.bonus - own.live.minus = 0 then 0 else
     (((if weak then 2 * (n + own.live.bonus - own.live.minus)
       else n + own.live.bonus - own.live.minus) - resist) + opp.live.more) - opp.live.reduce
 \end{lstlisting}
 \noindent with truncated subtraction, the static bonus added to the stored one and the static
 reduction to the stored one; a static prevention makes it 0 (\lean{GameState.dealt}). The penalty
-(\lean{minus}) enters at step 2 and the increase (\lean{more}) at step 5, before the reduction. The
-third test is a listed departure: the rulebook stops only when the base damage, the printed or
-computed number, is 0, so an attack for 30 under a penalty of 30 against a \pkmn{} that takes 50
-more does 50 by the literal rule and 0 here. Attack damage to Benched \pkmn{} is a printed amount
+(\lean{minus}) enters at step 2 and the increase (\lean{more}) at step 5, before the reduction. As
+printed, the calculation stops only when the base damage, the printed or computed number $n$, is 0:
+an attack for 30 under a penalty of 30 against a \pkmn{} that takes 50 more does 50
+(\lean{Defender.cancelled\_exposed}, a legal attack from a well-formed settled state written with
+both modifiers in force). Two readings fill gaps in the text. Each subtraction stops at 0, so a
+penalty or Resistance larger than the damage leaves 0, to which the increase is added; carrying a
+negative value to the next step would give less damage. And base damage 0 does nothing even with a
+bonus on the attacker (\lean{dealtBy\_zero}); testing after the bonus would do the bonus. Attack damage to Benched \pkmn{} is a printed amount
 with no Weakness, Resistance or modifier, which errs in both directions.
 
 \subsection{Abilities, Tools and Stadiums}\label{sec:abilities}
@@ -645,7 +648,7 @@ An evolution line that prints the same once-per-turn Ability can use it twice in
 Two trigger shapes only, with the readings of Section~\ref{sec:triggers}; no Prize-changing triggers & restricts expression; trigger termination rests on it \\
 History: Checkup Knock Outs unrecorded; Confused attempt and recoil as attacks; \lean{movedUp} not set by promotion; a \pkmn{} put on the opponent's Bench stays \lean{fresh}; one attack-lock flag per \pkmn{}, none set by an attack that may switch its user & not classified \\
 General primitives usable anywhere and inside \lean{iter}; ``up to $n$'' allows 0; no hidden information & neutral or harder \\
-The calculation stops when the damage after step 2 is 0, not only at base damage 0; a mandatory take from a private window cannot fail to find; Retreat Cost counted as printed & not classified (the first two forbid some) \\
+A mandatory take from a private window cannot fail to find; Retreat Cost counted as printed & not classified (the first forbids some) \\
 Special Energy riders, per-\pkmn{} modifiers other than attack locks and noted attacks, other triggers, devolution and Legendary Stadiums absent; unexpressed Stadium and Tool text inert & restricts expression \\
 \bottomrule
 \end{tabularx}
@@ -1165,7 +1168,7 @@ are a lingering effect printed on one \pkmn{} written as a modifier of its playe
 Bench damage without modifiers (78, both), recoil written as damage counters (67, both), ``up to
 $n$'' allowing 0 outside attacks (32, allows more), an Ability usable to no effect (20, allows more),
 and, with 17 each, a static reduction that does not protect the Bench (both) and an attachment or
-Bench placement that may do nothing (allows more). Each other caveat is on at most 16 cards; the importer's coverage report lists all 32 with
+Bench placement that may do nothing (allows more). Each other caveat is on at most 16 cards; the importer's coverage report lists all 31 with
 their counts. A card imported with caveats is in general neither an over- nor an
 under-approximation of its printed card, so the imported pool supports no ``no deck can \dots''
 argument without a check of the caveats involved.
@@ -1493,9 +1496,8 @@ Trainer effects have no damage step.
 prevention and locks on attacking, retreating and playing Items, for four slots; amounts add without
 limit, and modifiers belong to a player and survive evolution and a move to the Bench, which by the
 rulebook end them (pp.~11, 20; both directions). The bonus and penalty enter at step 2, the increase
-and then the reduction at step 5; the calculation stops when the damage after step 2 is 0, where the
-rulebook stops only at base damage 0 (forbids some: less damage than print when an increase
-follows). The per-\pkmn{} attack lock
+and then the reduction at step 5; the calculation stops only at base damage 0, as printed (two
+readings of the steps: Section~\ref{sec:linger-mech}). The per-\pkmn{} attack lock
 (\lean{InPlay.lk}) ends on a move to the Bench and on evolution, as printed; a card written with the
 per-player lock keeps the departure. Absent: threshold prevention, prevention of effects, other locks, ``attack twice'', ``take another turn'', damage
 taken last turn as an amount.
@@ -1612,7 +1614,7 @@ written in the root file \texttt{Pokemon.lean}, which contains only imports, is 
 library has its own gate in \texttt{PokemonCards/Audit.lean}.
 
 \paragraph{Counts and reproduction basis.} At the audited commit the gates print ``\texttt{audit:
-1460 theorems (+3065 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for \lean{Pokemon} and
+1464 theorems (+3065 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for \lean{Pokemon} and
 ``\texttt{audit: 277 theorems (+243 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for
 \lean{PokemonCards}. The basis is the continuous-integration run of that commit, whose two jobs build
 the libraries and require each gate's success line, and a local clean build with no warnings.
@@ -1927,7 +1929,7 @@ Triggers: two shapes, in a fragment that writes no store and reads no damage; de
 \lean{spreadAny} is exact for an attack's effect & machine-checked & Sec.~\ref{sec:vocab2} \\
 Switching off Resistance or step 5, with Weakness kept and no step-5 increase, never lowers the damage & machine-checked & Sec.~\ref{sec:vocab2} \\
 \lean{look}'s resolutions are exactly the partitions of the window as it was at the start & machine-checked & Sec.~\ref{sec:vocab2} \\
-The calculation stops when the damage after step 2 is 0, less than the literal rule in one case & by definition (a listed departure) & Sec.~\ref{sec:linger-mech} \\
+The calculation stops only at base damage 0; a penalty that cancels the damage leaves a step-5 increase in force & by definition; machine-checked (witnesses) & Sec.~\ref{sec:linger-mech} \\
 \lean{ifDone} and \lean{mayDo} are exact under their conditions, which hold for two discards in attacks & machine-checked & Sec.~\ref{sec:vocab2} \\
 Static prevention is computed, never stored, and protects the Active Spot only; a prevented attack fires no trigger & by definition; machine-checked (witness) & Sec.~\ref{sec:vocab2} \\
 Retreat may discard any choice of the attached Energy & by definition; machine-checked (witnesses) & Sec.~\ref{sec:moves} \\
