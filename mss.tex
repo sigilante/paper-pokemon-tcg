@@ -1,6 +1,6 @@
 % mss.tex
-% Evidence: ../PLAN.md, ../survey/S0--S15, ../data/README.md, and lean-pokemon (branch master,
-% commit 830eb42, read from the read-only checkout ../lean-pokemon-ci). Every claim below
+% Evidence: ../PLAN.md, ../survey/S0--S17, ../data/README.md, and lean-pokemon (branch master,
+% commit fa4ab0e, read from the read-only checkout ../lean-pokemon-ci). Every claim below
 % should trace to one of these. Lean statements are copied verbatim from the source; do not
 % edit them by hand -- re-copy them. The revision history of this manuscript is in git.
 
@@ -102,9 +102,9 @@ in finitely many classes of an exact-store bisimulation. None can be dropped fro
 infinitely many classes, though for four of them these are not shown to differ in play. Third,
 for decks no printed card supplies, every two-counter machine has a start from which a halt marker is
 reachable by some sequence of legal moves if and only if the machine halts; with Minsky's theorem
-(cited, not formalised) this reachability is undecidable. An importer translates 1,233 of the 2,161
+(cited, not formalised) this reachability is undecidable. An importer translates 1,377 of the 2,161
 cards with regulation mark H, I or J or Basic Energy; every game built from them alone meets the
-five conditions vacuously. No human has checked the translations. We conjecture that the
+five conditions, three of them vacuously. No human has checked the translations. We conjecture that the
 printed game is not Turing complete for decks with no recycling loop within a turn.
 \end{abstract}
 
@@ -191,20 +191,20 @@ formalise, reachability of the halt marker over these starts is undecidable.
 \paragraph{The imported Standard cards (machine-checked over generated terms).} An importer
 translates card text into the model and refuses any card with a sentence it cannot translate. Of
 the 2,161 cards of the Standard pool, which we take to be regulation marks H, I and J with Basic
-Energy (an assumption, Section~\ref{sec:standard}), it translates 1,233, 910 \emph{exactly} (with no
+Energy (an assumption, Section~\ref{sec:standard}), it translates 1,377, 1,020 \emph{exactly} (with no
 card-specific caveat; the model's global departures, Table~\ref{tab:departures}, still apply to every
-card) and 323 with named caveats (a known looseness of the translation, with its direction), and
-refuses 928, each with a reason. Lean proves that every game built only from the imported terms
+card) and 357 with named caveats (a known looseness of the translation, with its direction), and
+refuses 784, each with a reason. Lean proves that every game built only from the imported terms
 meets the five clauses of \lean{StoreSafe}, so Theorem~\ref{thm:xfinite} applies to it
-(Theorem~\ref{thm:importer}). The clauses hold there vacuously, since nothing they forbid occurs, so
-the theorem's content for these cards is mainly the bounds on derived HP and damage and the store
-bound for the 27 terms that write a carried modifier. It covers the cards as translated. No Lean statement ties a term to its card; LLM agents run
+(Theorem~\ref{thm:importer}). Clauses 1, 2 and 5 hold there because nothing they forbid occurs;
+clauses 3 and 4 meet cards they govern, recyclers that can return a modifier-writing card and one
+Ability that writes a bonus, and admit them. It covers the cards as translated. No Lean statement ties a term to its card; LLM agents run
 by the author compared the terms with the printed text, and no human has (Section~\ref{sec:importer}).
 
 \paragraph{The printed game (surveyed; open).} A survey of 20,776 English card records found no
 unbounded store that persists across turns and that card text reads beyond a yes-or-no test;
 within-turn accumulation through deck-cycling loops outside Standard was not checked
-(Section~\ref{sec:survey}). The 928 refused Standard cards, and every card outside Standard, are
+(Section~\ref{sec:survey}). The 784 refused Standard cards, and every card outside Standard, are
 open. We conjecture that, for decks in which no recycling loop replays a card within a turn, the
 printed \pkmn{} TCG is not Turing complete (Conjecture~\ref{conj:main}); for other decks the
 question is open.
@@ -223,20 +223,15 @@ Reachable states lie in finitely many exact-store classes & store-safe & machine
 No clause can be dropped from this proof (a difference in play shown only for clause 2) & one witness each & machine-checked & Table~\ref{tab:clauses} \\
 Halt marker reachable by some legal sequence iff the machine halts & built for each machine & machine-checked & Thm.~\ref{thm:universal} \\
 Reachability of the halt marker over those starts is undecidable & built for each machine & reduction machine-checked; Minsky cited & Sec.~\ref{sec:counter-what} \\
-Every game built only from the 1,233 imported cards meets the five clauses of \lean{StoreSafe}, vacuously & imported Standard cards & machine-checked & Thm.~\ref{thm:importer} \\
+Every game built only from the 1,377 imported cards meets the five clauses of \lean{StoreSafe}, three vacuously & imported Standard cards & machine-checked & Thm.~\ref{thm:importer} \\
 Each imported term says what its card says, up to its caveats & imported Standard cards & read by LLM agents; not verified & Sec.~\ref{sec:importer} \\
 No unbounded store that persists across turns and is read beyond a yes-or-no test & English card pool & surveyed & Sec.~\ref{sec:survey} \\
-Finiteness for the 928 refused Standard cards and outside Standard & --- & open & Sec.~\ref{sec:open} \\
+Finiteness for the 784 refused Standard cards and outside Standard & --- & open & Sec.~\ref{sec:open} \\
 The printed game is not Turing complete & decks with no within-turn recycling loop & conjectured & Conj.~\ref{conj:main} \\
 \bottomrule
 \end{tabularx}
 \caption{Headline claims. Evidence is as defined in Appendix~\ref{app:claims}, which lists every claim of the paper.}\label{tab:status}
 \end{table}
-
-\paragraph{Plan.} Section~\ref{sec:game} explains the game and Section~\ref{sec:model} the model.
-Section~\ref{sec:finite-side} proves the finiteness theorems and their negatives,
-Section~\ref{sec:linger} the two-counter reduction. Section~\ref{sec:printed} turns to the printed
-game: the survey, the Standard pool, the importer, and the conjecture.
 
 %======================================================================
 \section{The game for non-players}\label{sec:game}
@@ -244,9 +239,7 @@ game: the survey, the Standard pool, the importer, and the conjecture.
 
 The rulebook we follow is the current one, last updated November 2026 \cite{rb-26}, cited by page.
 An LLM agent read it in full as text and compared the model with it rule by rule (Appendix~\ref{app:departures});
-of its changes from the 2023 edition \cite{rb-151}, those that touch the model concern simultaneous
-wins, ``up to'', the order of Checkup effects, Mega Evolution \pkmn{} ex, ACE SPEC cards and
-Legendary Stadiums. We also use the Advanced Player's Rulebook Ver.~3.4 of \pkmn{} Asia \cite{apr}, tournament
+it supersedes the 2023 edition \cite{rb-151}. We also use the Advanced Player's Rulebook Ver.~3.4 of \pkmn{} Asia \cite{apr}, tournament
 documents \cite{trh26,pg26,tr2013} and two rulings \cite{compendium}.
 
 \paragraph{Cards and zones.} Each player has a deck of 60 cards. A \pkmn{} card has a printed HP
@@ -307,7 +300,7 @@ Whether HP, markers and lingering effects are bounded is a question about card t
 %======================================================================
 
 The model is the Lean~4 development \cite{lean-pokemon}, branch \texttt{master}, commit
-\texttt{830eb42} (the audited commit), built with core Lean v4.36.0 and no libraries. HP and damage
+\texttt{fa4ab0e} (the audited commit), built with core Lean v4.36.0 and no libraries. HP and damage
 are measured in damage counters. All Lean text in this paper is copied from that commit;
 docstrings, comments and \lean{deriving} clauses are omitted. Appendix~\ref{app:defs} has further
 definitions and Appendix~\ref{app:departures} every known departure from the rulebook, as the
@@ -318,8 +311,9 @@ definitions and Appendix~\ref{app:departures} every known departure from the rul
 A \pkmn{} in play (\lean{InPlay}) records its top card, the cards beneath it, attached Energy and
 Tools, its damage counters, a rotation condition (none, Asleep, Confused, Paralyzed), flags for
 Poisoned and Burned, its Poison strength \lean{poisonUp}, a flag \lean{fresh} for ``put into play
-or evolved this turn'', its markers, a flag \lean{used} for ``has used an Ability this turn'', and a
-flag \lean{movedUp} for ``moved from the Bench to the Active Spot this turn''. A player's state
+or evolved this turn'', its markers, a flag \lean{used} for ``has used an Ability this turn'', a
+flag \lean{movedUp} for ``moved from the Bench to the Active Spot this turn'', and an attack lock
+\lean{lk} (Section~\ref{sec:vocab2}). A player's state
 holds the zones, the Active \pkmn{}, the Bench, three once-per-turn flags, the once-per-game flag
 \lean{gxUsed}, a store \lean{mods} of lingering modifiers, a flag \lean{hadTurn}, and a Knock Out
 record \lean{ko}. The game state holds the two players' states as \lean{cur} (to move) and
@@ -340,10 +334,14 @@ milling, discard costs and \emph{recycling}, the return of cards from a discard 
 decidable. A \emph{test} reads either Active \pkmn{} (damage at least or exactly $n$, a Special
 Condition, a marker, a type, its printed card as in ``is a \pkmn{} ex'' (\lean{Test.top}), whether
 it has a Tool, \lean{movedUp}, whether it evolved this turn) or compares a \emph{count} with a
-number; a count reads cards that pass a filter in a zone, Prize cards left, Benched \pkmn{} or
-\pkmn{} in play (\lean{Count.inPlay}), attached Energy, or the Knock Out record. Filters also name
-\pkmn{} ex, Tera \pkmn{}, and a printed attack or Ability. These tests and filters read printed
-cards, which both clamps keep (\texttt{InPlayTests.lean}); a type filter reads the printed type, not
+number; a count reads cards that pass a filter in a zone, Prize cards left or taken
+(\lean{prizesTaken}, 6 less those left, exact from a 6-Prize set-up), Benched \pkmn{} or \pkmn{} in
+play (\lean{Count.inPlay}), attached Energy, Tools or types of Basic Energy, the Special Conditions
+of an Active \pkmn{}, a player's Supporter flag (for the player not to move, their last turn), or
+the Knock Out record. Filters also name \pkmn{} ex, Tera \pkmn{}, a printed attack or Ability, and
+a prefix or part of the printed name (\lean{namePrefix}, \lean{nameHas}, compared as UTF-8 bytes).
+These tests, counts and filters read printed cards, flags and Prize cards, which both clamps keep
+(\texttt{InPlayTests.lean}, \texttt{Vocab4.lean}); a type filter reads the printed type, not
 a Coloring marker, and ``has an Ability'' ignores one a Tool gives (two listed departures). An \emph{amount}, the base damage an attack's text computes, is built from constants,
 damage counters on an Active \pkmn{}, counts, sums, truncated differences and ``flip until tails''
 sums. No count reads damage; no effect reads Poison strength, the lingering modifiers, or any history
@@ -518,9 +516,8 @@ or optional, and their effects lie in a fragment \lean{Effect.trigOk} (draws, da
 Special Condition other than Paralysis on the Attacking \pkmn{}, zone moves that cannot fail, a Tool
 discard), which always resolves, writes no store and reads no damage. A trigger belongs to the player whose
 turn it is not and resolves by \lean{Run} on the state with the players exchanged (\lean{Fire}),
-each as a whole and several in any order. Paralysis is excluded because a trigger inflicts it in the
-attacker's own turn, and the rulebook's recovery ``after its owner's next turn'' \cite[p.~16]{rb-26}
-would then need a per-\pkmn{} record of when it began. \lean{damaged} triggers fire at the end of the attack,
+each as a whole and several in any order. Paralysis is excluded: a trigger would inflict it in the
+attacker's turn, and its recovery \cite[p.~16]{rb-26} would need a per-\pkmn{} record. \lean{damaged} triggers fire at the end of the attack,
 before its Knock Out check; whether the \pkmn{} was damaged is decided on the attack's damage step
 (\lean{HitRun}, \lean{HitTrig}). \lean{koByAttack} triggers fire in the batch move after the batch
 step. The trigger chains end because every Knock Out gives a Prize card and nothing returns one
@@ -540,11 +537,9 @@ carries the Bench-damage departure of Section~\ref{sec:linger-mech} and has no e
 and \lean{Effect.spreadAny} (``put 6 damage counters on your opponent's \pkmn{} in any way you
 like''). The translation by \lean{spreadAny} is exact for an attack's effect from a state with an
 opposing Active \pkmn{}: every resolution places $d$ counters on the Active \pkmn{} and $k$ on the
-Bench with $d+k=n$ and changes nothing else (\lean{Spread.spreadAny\_sound}), the total rises by
-exactly $n$ (\lean{Spread.spreadAny\_oppDamage}), with an empty Bench all $n$ go on the Active
-\pkmn{} (\lean{Spread.spreadAny\_emptyBench}), and, with the attacker Active, every distribution is
-a resolution (\lean{Spread.spreadAny\_complete}). Inside a Trainer effect a Knock Out check would
-follow each counter; spread amounts computed by the text are not expressible.
+Bench with $d+k=n$ and changes nothing else (\lean{Spread.spreadAny\_sound}), and, with the
+attacker Active, every distribution is a resolution (\lean{Spread.spreadAny\_complete}). Spread
+amounts computed by the text are not expressible.
 
 \paragraph{The Knock Out record.} Each player has a Knock Out record (\lean{KOHist}: four flags,
 whether one of the player's \pkmn{} was Knocked Out this turn and last turn, and whether by the
@@ -556,34 +551,44 @@ the cards under the top card. Nothing is counted, so the record takes 16 values 
 hypothesis. What the record leaves out or reads widely is listed in Appendix~\ref{app:departures},
 item 14.
 
+\paragraph{Attack locks.} ``During your next turn, this \pkmn{} can't use [this attack]'' and ``\dots\
+can't use attacks'' are a field \lean{Attack.selfLock} (none, \lean{this}, \lean{all}). Each
+\pkmn{} carries \lean{InPlay.lk}, the lock set this turn and the lock in force: nine values, in the
+enumerations (\lean{Enum.lockStates}) and kept by both clamps. The attack sets it
+(\lean{GameState.afterAttack}), the end of its owner's turn brings it into force and the next ends
+it, the attack moves refuse what it forbids, and retreat, \lean{switch} and evolution clear it
+\cite[pp.~11, 20]{rb-26}. \lean{this} forbids every attack of its \pkmn{} whose \lean{selfLock} is
+\lean{this}, so it is exact for a \pkmn{} with at most one. \lean{Lock.trace} states that from a
+well-formed, settled start a move (the attack Giant Wave) leads to a state from which a state $g_3$
+is reachable; that every move from $g_3$ after which the player has attacked leaves the opponent's
+Active \pkmn{} unchanged; and that from $g_3$ a move and further play reach a state with a move
+after which that \pkmn{} has 4 damage counters. Companions show that $g_3$ is the attacker's next
+turn with the lock in force (\lean{Lock.g3\_lock}) and that a retreat there clears it
+(\lean{Lock.g3\_retreat\_unlocks}).
+
 \paragraph{Ignored steps.} A damage step carries three flags (\lean{Ign}) for ``This attack's damage
 isn't affected by'' Weakness, Resistance, or ``any effects on your opponent's Active \pkmn{}'', and
 does \lean{GameState.dealtI}: the calculation with step 3, step 4, or step 5 (the defender's stored
 reduction and prevention and its static reductions and preventions) switched off; the attacker's
-bonuses always apply. Both clamps keep it, since it reads less of the state; switching off Resistance
-or step 5, with Weakness kept, never lowers the damage (\lean{GameState.dealt\_le\_dealtI}). The model counts a
-Stadium's effect on the defender among the effects of step 5; no ruling was checked.
+bonuses always apply. Both clamps keep it; switching off Resistance or step 5, with Weakness kept,
+never lowers the damage (\lean{GameState.dealt\_le\_dealtI}). Step 5 includes a Stadium's effect on
+the defender (no ruling checked).
 
 \paragraph{Static prevention.} \lean{SEff.prevent} makes the damage 0 at step 5 when the attacker's
 top card passes a filter (``Prevent all damage done to this \pkmn{} by attacks from your opponent's
 \pkmn{} ex''). It is computed from the static effects in force (\lean{GameState.sPrevent}), never
 stored, so neither the store bound nor the clamps change, and a prevented attack fires no
-\lean{damaged} trigger (\lean{Prevent.prevented\_quiet}). It protects only in the Active Spot:
-attack damage to a Benched \pkmn{} reads no static effect, so the model does Bench damage that print
-prevents.
+\lean{damaged} trigger (\lean{Prevent.prevented\_quiet}). It protects only in the Active Spot.
 
 \paragraph{``If you do''.} Three derived forms, with no new state, write consequences:
-\lean{mayDo a b} is \lean{choice (seq a b) skip} (``You may A. If you do, B''), \lean{ifDone t a b}
-is \lean{ite t (seq a b) skip} (``A. If you do, B'', with $t$ a test that A can be done), and
-\lean{forUpTo f N} chooses \lean{f i} for some $i \le N$ (``\dots\ for each card you discarded in
-this way''). Their exactness is conditional. \lean{Run.mayDo\_exact} gives the printed reading when
-every resolution of A changes the state, and \lean{Run.ifDone\_exact} when $t$ holds exactly when A
-has a resolution. Feasibility lemmas discharge these conditions for discarding $n$ cards from the
-hand (\lean{Run.ifDone\_discardHand}) and $n$ Energy from the Active \pkmn{}
-(\lean{Run.ifDone\_discardActive}; for \lean{forUpTo}, \lean{Run.forUpTo\_discardActive} once $N$
-covers the Energy attached). All are stated for
-\lean{Run}, that is for attacks; for any other A, and for the test the importer chooses, exactness
-is argued, not proved.
+\lean{mayDo a b} is \lean{choice (seq a b) skip}, \lean{ifDone t a b} is \lean{ite t (seq a b) skip}
+with $t$ a test that A can be done, and \lean{forUpTo f N} chooses \lean{f i} for some $i \le N$
+(``\dots\ for each card you discarded in this way''). \lean{Run.mayDo\_exact} gives the printed
+reading when every resolution of A changes the state, and \lean{Run.ifDone\_exact} when $t$ holds
+exactly when A has a resolution; feasibility lemmas discharge these conditions for discarding cards
+from the hand or Energy from the Active \pkmn{} (\lean{Run.ifDone\_discardHand},
+\lean{Run.ifDone\_discardActive}, \lean{Run.forUpTo\_discardActive}). All are stated for \lean{Run},
+that is for attacks; elsewhere, and for the test the importer chooses, exactness is argued.
 
 \subsection{Tame decks}\label{sec:tame}
 
@@ -631,9 +636,9 @@ Bench damage without modifiers or static prevention; recoil as damage counters; 
 One \lean{used} flag per \pkmn{}, shared with Tool-given Abilities & not classified (forbids some; the store bound is not proved for a flag per Ability) \\
 An evolution line that prints the same once-per-turn Ability can use it twice in a turn & neutral or harder (allows more; no ruling checked) \\
 Two trigger shapes only, with the readings of Section~\ref{sec:triggers}; no Prize-changing triggers & restricts expression; trigger termination rests on it \\
-History: Checkup Knock Outs unrecorded; Confused attempt and recoil as attacks; \lean{movedUp} not set by promotion; a \pkmn{} put on the opponent's Bench stays \lean{fresh} & not classified \\
+History: Checkup Knock Outs unrecorded; Confused attempt and recoil as attacks; \lean{movedUp} not set by promotion; a \pkmn{} put on the opponent's Bench stays \lean{fresh}; one attack-lock flag per \pkmn{}, none set by an attack that may switch its user & not classified \\
 General primitives usable anywhere and inside \lean{iter}; ``up to $n$'' allows 0; no hidden information & neutral or harder \\
-Special Energy, per-\pkmn{} modifiers, other triggers, devolution and Legendary Stadiums absent; unexpressed Stadium and Tool text inert & restricts expression \\
+Special Energy, per-\pkmn{} modifiers other than attack locks, other triggers, devolution and Legendary Stadiums absent; unexpressed Stadium and Tool text inert & restricts expression \\
 \bottomrule
 \end{tabularx}
 \caption{The model's departures from the rulebook, grouped.}\label{tab:departures}
@@ -837,7 +842,7 @@ Item or Supporter that writes a rest-of-game amount; (4)~\lean{AbilitySafe}: no 
 writes, and no Ability writes a rest-of-game amount; (5)~\lean{StadiumSafe}: no Stadium effect
 writes a rest-of-game amount. Each clause is decidable. Locks and prevention may appear anywhere;
 attacks may recycle every other card, since an attack ends the turn; once-per-turn, on-play and
-triggered Abilities and Stadium effects may write carried modifiers and recycle within clause 3(b);
+triggered Abilities and Stadium effects may write any but rest-of-game modifiers and recycle within clause 3(b);
 static effects write and recycle nothing. Triggered Abilities are not free recyclers in clause
 3(a): they fire only after the turn's attack.
 
@@ -996,7 +1001,8 @@ card; neither has a Bench. Let \lean{span} be one more than the largest state an
 \end{itemize}
 One machine step takes six moves. \lean{Encodes M c g} says that $g$ has the shape of an abstract
 state whose configuration is $c$, at the start of the first player's turn proper, with no static
-effect and no triggered Ability in the game.
+effect and no triggered Ability in the game; its \lean{Shape} requires, among the rest, that neither
+Active \pkmn{} carries an attack lock.
 
 \subsection{The theorem}\label{sec:counter-theorem}
 
@@ -1062,9 +1068,8 @@ that respects the halt question exists, non-constructively.
 \paragraph{Representation.} For the machine \lean{countUp}, whose one instruction increments a
 register it never reads, no finite list contains, up to any equivalence fine enough to recover the
 encoded configuration, every reachable state (\lean{Counter.not\_finite\_up\_to},
-\lean{StoreSafe.xclamp\_not\_finite}). The extra states differ only in a reduction nothing observes:
-representations of configurations are infinite, and whether a finite bisimulation quotient exists
-for this deck is open.
+\lean{StoreSafe.xclamp\_not\_finite}); whether a finite bisimulation quotient exists for this
+deck is open.
 
 %======================================================================
 \section{The printed game}\label{sec:printed}
@@ -1089,8 +1094,7 @@ flags, modifiers from once-per-game GX attacks, win or loss clauses and face-up 
 reads a count of events over the game, and no card brings a card in from outside the game. Every
 count read by card text is bounded by cards, HP, Prizes or a printed constant. No card caps the
 Imprison or Shock-wave markers, but every card that reads them asks only whether a \pkmn{} has any,
-and every removal removes all. ``As often as you like'' and ``flip until tails'' repeat an action
-within a finite set of states, adding time, not memory.
+and every removal removes all.
 
 \paragraph{The claim and its limits.} The survey found no unbounded store that persists across
 turns and that card text reads beyond a yes-or-no test. Within-turn accumulation through
@@ -1119,9 +1123,8 @@ within one turn that plays a card (the only unbounded within-turn loops, of Mega
 Team Rocket's Orbeetle, are card-neutral); no modifier writer replayed within a turn; writers
 replayed across turns without limit (an attack of Dedenne returns any Trainer every turn), which is
 why the store bound is per turn; and no card that writes a this-turn and a carried modifier together
-(numeric bonuses and reductions only; prevention and locks were not searched). The analysis rests
-on the pool assumption and on hand arguments over Ability families; no second agent has checked
-it.
+(numeric bonuses and reductions only). It rests on the pool assumption and on hand arguments over
+Ability families; no second agent has checked it.
 
 \subsection{The imported cards}\label{sec:importer}
 
@@ -1134,32 +1137,30 @@ a sentence table or a multi-sentence form; \emph{a card is refused if any senten
 defensible translation}, and every blocker is recorded. Damage is composed into one damage step;
 an attack that fails the model's well-formedness check is refused; a Tool or Stadium is imported
 only if its whole text translates, never as an inert card (\lean{notInert}); and a static Ability
-that says its effect ``doesn't stack'' is refused, since the model adds every effect in force. The
-importer writes \lean{ifDone} over four actions only (discarding one card from the hand, drawing,
-and switching either player's Active \pkmn{}), each with a test argued from the rules of \lean{Run},
-not proved, to hold exactly when the action can be done; it does not use \lean{mayDo}.
+that says its effect ``doesn't stack'' is refused, since the model adds every effect in force.
+\lean{ifDone} is written over four actions only, each with a test argued, not proved, to hold exactly
+when the action can be done.
 
-\paragraph{Who read the translations.} The importer grew in seven rounds, each adding a family of
+\paragraph{Who read the translations.} The importer grew in nine rounds, each adding a family of
 card text. In every round the LLM agent that wrote it read the new cards against their printed
-records. In five rounds a second LLM agent, run by the author with a reviewer prompt and given the
-terms, records and model sources but not the first agent's conclusions, read them too: a sample in the first two rounds (66 cards, then 40 Ability cards), and every
-new card in the Tools and Stadiums round (22) and the last two (67 and 41). In two rounds, static
-text (31 cards) and triggers (16), only the importer's agent read the cards; the trigger cards were
-read by a second agent in the next round, the static cards never. No human has read the translations.
+records. In seven rounds a second LLM agent, run by the author with a reviewer prompt and given the
+terms, records and model sources but not the first agent's conclusions, read them too: a sample in
+the first two rounds (66 cards, then 40 Ability cards); every new card in the Tools and Stadiums
+round (22) and the two after the trigger round (67 and 41); 74 of the 87 new cards of the round of
+importer-only rules (the last 13 had one reader); and all 84 new or rewritten cards of the last
+round. In two rounds, static text (31 cards) and triggers (16), only the importer's agent read the
+cards; the trigger cards were read by a second agent in the next round, the static cards never. No
+human has read the translations.
 
 \paragraph{Caveats.} A translation that is knowingly loose carries a named caveat, each tied to an
 entry of the Known gaps and labelled with its direction: the term \emph{allows more} outcomes than
 the printed card, \emph{forbids some} it allows, or differs in \emph{both} directions. The six largest
-are a lingering effect printed on one \pkmn{} written as a modifier of its player (88 cards, both),
-recoil written as damage counters (62, both), Bench damage without modifiers (58, both), ``up to
-$n$'' allowing 0 outside attacks (23, allows more), an Ability usable to no effect (19, allows more)
-and a static reduction that does not protect the Bench (16, both). The readings of Sections~\ref{sec:triggers}
-and~\ref{sec:vocab2} carry their own caveats: the \lean{damaged} decision and ``the Attacking
-\pkmn{}'' (14 cards each, both), the wide reading of \lean{koByAttack} (3, allows more), the wide
-Knock Out record (7, both), unrecorded Checkup Knock Outs and \lean{movedUp} after a promotion (3
-each, forbids some), a Stadium's effect ignored with step 5 (11, both), static prevention in the
-Active Spot only (5, both), ``any amount'' bounded by 60 cards (3, forbids some) and ``has an
-Ability'' blind to Tools (3, both). A card imported with caveats is in general neither an over- nor an
+are Bench damage without modifiers (71 cards, both), a lingering effect printed on one \pkmn{}
+written as a modifier of its player (69, both), recoil written as damage counters (67, both), ``up to
+$n$'' allowing 0 outside attacks (31, allows more), an Ability usable to no effect (20, allows more),
+and, with 17 each, a static reduction that does not protect the Bench (both) and an attachment or
+Bench placement that may do nothing (allows more). The readings of Sections~\ref{sec:triggers} and~\ref{sec:vocab2} carry their own caveats, each on at
+most 16 cards; the importer's coverage report lists all 28 caveats with their counts. A card imported with caveats is in general neither an over- nor an
 under-approximation of its printed card, so the imported pool supports no ``no deck can \dots''
 argument without a check of the caveats involved.
 
@@ -1170,15 +1171,15 @@ argument without a check of the caveats involved.
 \toprule
 Kind & Cards & Imported exactly & With caveats & Refused \\
 \midrule
-\pkmn{} & 1,881 & 872 & 288 (45 allow more, 240 both, 3 forbid some) & 721 \\
-Item & 86 & 11 & 16 (15 allow more, 1 both) & 59 \\
-Supporter & 83 & 6 & 10 (8 allow more, 2 both) & 67 \\
-\pkmn{} Tool & 44 & 7 & 7 (3 allow more, 4 both) & 30 \\
-Stadium & 36 & 5 & 2 (1 allow more, 1 both) & 29 \\
+\pkmn{} & 1,881 & 964 & 308 (58 allow more, 246 both, 4 forbid some) & 609 \\
+Item & 86 & 17 & 24 (23 allow more, 1 both) & 45 \\
+Supporter & 83 & 15 & 14 (11 allow more, 2 both, 1 forbids some) & 54 \\
+\pkmn{} Tool & 44 & 8 & 8 (3 allow more, 5 both) & 28 \\
+Stadium & 36 & 7 & 3 (1 allows more, 2 both) & 26 \\
 Special Energy & 22 & 0 & 0 & 22 \\
 Basic Energy & 9 & 9 & 0 & 0 \\
 \midrule
-All & 2,161 & 910 & 323 (72 allow more, 248 both, 3 forbid some) & 928 \\
+All & 2,161 & 1,020 & 357 (96 allow more, 256 both, 5 forbid some) & 784 \\
 \bottomrule
 \end{tabular}
 \caption{The imported cards of the Standard pool, by kind. A caveat \emph{allows more} if the term
@@ -1187,24 +1188,23 @@ allows, and is counted under \emph{both} if it does both or the card's caveats d
 direction.}\label{tab:import}
 \end{table}
 
-\paragraph{Numbers.} Table~\ref{tab:import} gives the counts: 1,233 cards imported (57.1\%), 910
-exactly and 323 with caveats, as 1,227 distinct terms (six cards share the term of an earlier
-printing), and 928 refused. Of the 315 \pkmn{} with an Ability, 92 are imported; 17 cards carry a
-triggered Ability or Tool text of the two modelled shapes, all with caveats; 14 of the 44 Tools and 7
-of the 36 Stadiums are imported.
+\paragraph{Numbers.} Table~\ref{tab:import} gives the counts: 1,377 cards imported (63.7\%), 1,020
+exactly and 357 with caveats, as 1,370 distinct terms (seven cards share the term of an earlier
+printing), and 784 refused. Of the 315 \pkmn{} with an Ability, 107 are imported; 19 cards carry a
+triggered Ability or Tool text of the two modelled shapes, all with caveats; 16 of the 44 Tools and
+10 of the 36 Stadiums are imported. The refusals divide into importer gaps, where the model
+expresses the text and a rule is missing (17 cards), model gaps (759) and deliberate refusals (8),
+by an LLM agent's reading of every blocker.
 
 \begin{theorem}[\lean{PokemonCards.Standard.storeSafe}, \lean{PokemonCards.Standard.xfinite} and
 companions]\label{thm:importer}
-Let \lean{all} be the list of the 1,227 imported terms. Then \lean{all} has no two equal terms
+Let \lean{all} be the list of the 1,370 imported terms. Then \lean{all} has no two equal terms
 (\lean{all\_nodup}), and every game whose cards are all in \lean{all} satisfies the five clauses of
 \lean{StoreSafe}, so Theorem~\ref{thm:xfinite} applies to it (\lean{xfinite},
 Appendix~\ref{app:defs}).
 \begin{lstlisting}
 theorem storeSafe (g : GameState) (hg : ∀ x ∈ g.allCards, x ∈ all) : g.StoreSafe :=
   storeSafe_of all_ok recSafe g hg
-
-theorem hpOf_le_120 (g : GameState) (hg : ∀ x ∈ g.allCards, x ∈ all) (hn : g.allCards.length ≤ 120)
-    {w : Whose} {sp : Spot} {p : InPlay} (hp : g.In w sp p) : g.hpOf w sp p ≤ 290438
 \end{lstlisting}
 (In namespace \lean{PokemonCards.Standard}.)
 \end{theorem}
@@ -1213,25 +1213,27 @@ theorem hpOf_le_120 (g : GameState) (hg : ∀ x ∈ g.allCards, x ∈ all) (hn :
 generated terms: every imported attack is well formed (\lean{attacks\_wf}), every Trainer and Ability
 effect has no damage step, every card satisfies clauses 1, 2, 4 and 5, the recycling check of clause 3
 holds over the whole list (\lean{recSafe}), and every imported trigger fires wherever its place
-allows, with an effect in the trigger fragment (\lean{triggers\_fire}). The counts are
-\lean{all\_length}, \lean{notImported\_length} and \lean{pool\_size}, arithmetic on list lengths.
-\lean{hpOf\_le\_120} is a crude bound on the model's terms, not a claim about printed HP. Imported
-decks are store-safe but not in general tame: \lean{untame} lists 28 imported terms that use
+allows, with an effect in the trigger fragment (\lean{triggers\_fire}). Imported decks are store-safe but not in general tame: \lean{untame} lists 28 imported terms that use
 \lean{drain} or store a reduction, so Theorem~\ref{thm:finite} is not claimed for them.
 
-\paragraph{What the clauses do for the imported pool.} For the imported terms the five clauses hold
-because nothing they forbid occurs. Of the 1,227 terms, 27 write a damage bonus or reduction: 26 in
-an attack of a \pkmn{} and one in the Supporter Jasmine's Gaze (\lean{writers}). All 27 writes are
-carried: 24 reductions into the opponent's next turn and 3 bonuses into the turn after. None writes
-a rest-of-game amount (\lean{restOfGameWriters}), no Ability writes one (\lean{abilityWriters}), no
-Stadium or Tool writes one, no Item writes one (\lean{nonSupporterWriters}), and \lean{iter} occurs
-in no term. So clauses 1, 2, 4 and 5 hold vacuously, and so does clause 3: 19 terms return a card
-from a discard pile (10 attacks, 6 Items, a Supporter, a Stadium, an on-play Ability), but no
-writing Item or rest-of-game writer exists for them to return; clause 3 does work only in the
-probe below. The theorem's content for the imported pool is therefore mainly the bounds on derived
-HP and damage and the store bound for carried modifiers. The listings named are Lean theorems; the
-slots, the absence of \lean{iter} and of Stadium and Tool writes, and the recycler counts come from a
-script over the generated files, which reproduces the 27 names of \lean{writers}.
+\paragraph{What the clauses do for the imported pool.} Of the 1,370 terms, 28 write a damage
+bonus or reduction (\lean{writers}): 26 in an attack of a \pkmn{}, one in the Supporter Jasmine's
+Gaze, and one in an Ability, Feraligatr's once-per-turn Torrential Heart
+(\lean{abilityWriters}). Of the 28 writes, 24 are reductions into the opponent's next turn, 3 are
+bonuses into the turn after, and Feraligatr's is a bonus for the turn of use (slot \lean{now}).
+None writes a rest-of-game amount (\lean{restOfGameWriters}), no Item writes
+(\lean{nonSupporterWriters}), no Stadium or Tool writes, and \lean{iter} occurs in two attacks,
+neither of which writes under it. So clauses 1, 2 and 5, and clause 3(b), hold because nothing they
+forbid occurs. Clauses 3(a) and 4 meet cards they govern and admit them. Of the 21 terms that return
+a card from a discard pile, 14 can return a writer: 10 a \pkmn{} whose attack or Ability writes, and
+Phione, Dedenne, Audino and the Item Miracle Headset the Supporter Jasmine's Gaze. Seven of the 14
+are Items or Supporters, which clause 3(a) constrains; it admits them because what they can return
+is a \pkmn{} or a Supporter, which is played at most once a turn, not an Item. Clause 4 admits
+Feraligatr's Ability because it is not unlimited and writes no rest-of-game amount; the store bound
+charges it through $Q$. The listings named are Lean theorems; the slots, the occurrences of
+\lean{iter}, the absence of Stadium and Tool writes, and the recycler counts come from a script over
+the generated files, which reproduces the 28 names of \lean{writers} and the nine of
+\lean{freeRecyclers}.
 
 \paragraph{Scope.} Lean proves, about the generated terms, that every game built only from them meets
 the five clauses of \lean{StoreSafe} and so has a finite exact-store quotient. Three links lie outside
@@ -1239,7 +1241,9 @@ Lean. The first is the reading: no Lean statement ties a term to its card. The L
 rounds above compared the translations with the printed records; they found three translations that
 allowed outcomes their cards do not and four attacks with an Energy discard after the damage
 instead of before, all fixed, six cards whose terms forbade a printed outcome, all refused, and
-one card whose term allowed more than its caveats said, which gained a caveat. A further LLM agent,
+one card whose term allowed more than its caveats said, which gained a caveat; in the last two rounds,
+a play condition placed inside a coin flip, fixed, and a name filter that only cards the model never
+has in play could pass, refused. A further LLM agent,
 run by the author as a hostile referee, read 40 imported cards (25 random, 15 stratified) and found no
 error, which bounds little: 12 of the 25 random cards have no effect text. The second is the partition: that the imported and refused lists make up the pool is established by
 the importer and an external script, since the pool is not a Lean object. The third is clause 3 for
@@ -1248,41 +1252,35 @@ Iron Defender and Premium Power Pro, are refused for their type-restricted modif
 probe adds over-approximated terms for both, and Lean proves that every game whose cards come from
 the imported terms and these two satisfies all five clauses
 (\lean{OverApprox.storeSafe\_withOverItems}); with the recycling analysis of
-Section~\ref{sec:standard} this supports the clause for Standard but does not prove it. The 928
+Section~\ref{sec:standard} this supports the clause for Standard but does not prove it. The 784
 refused cards, and every deck that mixes one in, lie outside the theorem.
 
-\paragraph{Why coverage stops at 57.1\%.} Table~\ref{tab:blockers} ranks the mechanisms that block
-the refused cards; after a tail of single-card wordings, prevention in attack text leads.
+\paragraph{Why coverage stops at 63.7\%.} Table~\ref{tab:blockers} ranks the model gaps by the
+refused cards each would unlock alone; triggers of other events and Special Energy lead.
 
 \begin{table}[t]
 \centering
 \footnotesize
 \begin{tabular}{@{}lrr@{}}
 \toprule
-Blocking mechanism & Alone & In all \\
+Missing model construct & Alone & In all \\
 \midrule
-Other: a long tail of single-card wordings & 89 & 192 \\
-Effect prevention, threshold or typed prevention in attack text & 31 & 36 \\
-Special Energy & 31 & 34 \\
-Triggered Ability of other shapes & 30 & 39 \\
-Name prefix (a filter on part of a name) & 28 & 34 \\
-Energy to hand, deck or between specific \pkmn{} & 26 & 41 \\
-Coin-flip variants & 26 & 39 \\
-A condition the model cannot test & 26 & 37 \\
-Per-attack lock (``this \pkmn{} can't use [attack]'') & 22 & 27 \\
-Look at or reveal, and choose from the deck or hand & 21 & 52 \\
-Spread ``in any way you like'' or to several chosen \pkmn{} & 18 & 37 \\
-Static prevention or immunity & 18 & 25 \\
-Prize cards taken, compared or moved & 17 & 27 \\
-Other forms of activated Ability & 17 & 24 \\
-A count the model cannot read & 16 & 22 \\
+Triggers on other events (Checkup, moves, the opponent's plays, replacement) & 63 & 68 \\
+Special Energy (cards and text) & 40 & 46 \\
+Look at or reveal, and choose from a fixed set & 35 & 46 \\
+Counts the model lacks (damage on several \pkmn{}, Retreat Cost, \dots) & 29 & 46 \\
+Defender modifiers outside steps 2 and 5 & 22 & 26 \\
+Prevention of effects of attacks & 22 & 23 \\
+History left (attack used last turn, named Supporter, healed) & 21 & 23 \\
+Energy to the hand or deck, or moves of several Energy & 20 & 27 \\
+Healing several or filtered \pkmn{} & 18 & 26 \\
+Static prevention or immunity & 18 & 24 \\
 \bottomrule
 \end{tabular}
-\caption{The fifteen mechanisms that block the most of the 928 refused cards alone (keyword
-classification); four more block 14 alone each, among them ``if you do'' consequences the model does
-not express (14 alone, 55 in all). \emph{Alone}: cards for which it is the only blocker; \emph{in
-all}: cards among whose blockers it is. The full list is in the importer's coverage report,
-\texttt{tools/importer/out/coverage.md}.}\label{tab:blockers}
+\caption{The ten model gaps that block the most of the 759 refused cards of class M alone (an LLM
+agent's reading of every blocker, recorded as patterns). \emph{Alone}: cards for which it is the only
+missing construct; \emph{in all}: cards that need it. 17 refused cards need only importer rules, and
+8 are refused deliberately.}\label{tab:blockers}
 \end{table}
 
 \subsection{What remains open}\label{sec:open}\label{sec:hide}
@@ -1291,11 +1289,10 @@ all}: cards among whose blockers it is. The full list is in the importer's cover
 increment, a decrement (healing, Alakazam's Damage Swap), zero and exact tests (``exactly 6 damage
 counters''); what they lack is capacity, since they are below HP after every Knock Out check and HP
 is bounded by the cards. The resolution of one attack is the only window in which damage may exceed
-HP while a player's choices are carried out; as far as the search reaches, one printed attack is
-straight-line code with nondeterministic choices. Poison strength only increments, resets, and is
-read destructively by Checkup. Control is cheap: the pool offers threshold, equality and parity
-tests, and a player who executes a program is its program counter, so the realistic assumptions
-about play are cooperative play or a unique legal line enforced by locks.
+HP; as far as the search reaches, a printed attack is straight-line code with nondeterministic
+choices. Poison strength only increments, resets, and is read destructively by Checkup. Control is
+cheap: the pool offers threshold, equality and parity tests, and a player who executes a program is
+its program counter.
 
 \paragraph{Why the construction does not run on printed cards.}\label{sec:linger-printed} The
 targeted reading found four rest-of-game templates: three from GX attacks and one Trainer that turns
@@ -1305,10 +1302,9 @@ loop has existed in the Expanded format, after which Flapple was banned there \c
 not checked whether it can replay a modifier card.
 
 \paragraph{The open question.} Whether any finiteness theorem holds for the full Standard pool is
-open. A proof needs in the model what it lacks, led by the blockers of Table~\ref{tab:blockers}, and
-also stacking limits, Bench size, per-\pkmn{} modifiers, set-up, attacking twice and returns from
-play; attacking twice and returns from play each reopen the store bound. Where the current rulebook leaves a question open,
-the model decides it (Appendix~\ref{app:departures}).
+open. A proof needs the model gaps of Table~\ref{tab:blockers}, stacking limits, Bench size,
+per-\pkmn{} modifiers, set-up, attacking twice and returns from play; the last two reopen the store
+bound.
 
 \subsection{Conjecture and relaxations}\label{sec:conjecture}\label{sec:lattice}
 
@@ -1324,10 +1320,10 @@ moves up to that image.
 \noindent By the argument of Corollary~\ref{cor:counter}, the conjecture implies that for these decks
 no injective map sends the configurations of a two-counter machine with infinitely many reachable
 configurations to classes of reachable states; in this sense the game is not Turing complete for
-them. For decks with a recycling loop within a turn the question is open. Of the rule changes that might make the game
-universal, only rest-of-game modifiers in non-GX attacks, with the generality of
-Section~\ref{sec:counter-generality}, have a machine-checked part; a coupled replayable writer is
-argued (Appendix~\ref{app:future}); unbounded HP and unbounded decks are conjectured routes under cooperative play.
+them. For decks with a recycling loop within a turn the question is open. Of the rule changes that
+might make the game universal, only rest-of-game modifiers in non-GX attacks
+(Section~\ref{sec:counter-generality}) have a machine-checked part; a coupled replayable writer is
+argued (Appendix~\ref{app:future}); unbounded HP and decks are conjectured routes under cooperative play.
 
 \begin{remark}[Energy]\label{rem:energy}
 Attached Energy is a count with an increment (\lean{attach}), a decrement (\lean{discardEnergy})
@@ -1335,8 +1331,7 @@ and a zero test (\lean{countGe} on \lean{Count.energy}), which both clamps keep 
 (\lean{Count.val\_clampAt}, \lean{Count.val\_xclampAt}). It is bounded: Energy is cards, so
 \lean{Reach.perm} (Theorem~\ref{thm:perm}) bounds the Energy in play by the Energy cards in the
 game. Returning Energy from a discard pile (\lean{attach} from \lean{Src.discard}, as printed cards
-do) moves the same cards: unbounded plays, not unbounded state. It is a count, not a stack: the
-player chooses which Energy to discard.
+do) moves the same cards: unbounded plays, not unbounded state.
 \end{remark}
 
 \begin{conjecture}[token Energy]\label{conj:token}
@@ -1367,8 +1362,7 @@ PSPACE-hardness of perfect-information Hearthstone \cite{zhang-hearthstone}, and
 single-player UNO \cite{uno}; Turing completeness has also been shown for the video game Sid Meier's
 Civilization \cite{dewynter-civ}, a paper we saw only in search summaries. Results on the \pkmn{}
 \emph{video} games \cite{nintendo-hard} concern a different game. We found no negative argument
-(``finite state, so not universal'') for the \pkmn{} TCG; a negative result is only as good as the
-model it is proved for, which is why we mechanize the model and list its departures.
+(``finite state, so not universal'') for the \pkmn{} TCG.
 
 \paragraph{How these works were read.} An LLM agent did the literature search. It read
 \cite{cbh-mtg,ygo,riftbound} in full, only the abstracts of \cite{biderman-arith,bosboom-netrunner,zhang-hearthstone},
@@ -1378,39 +1372,36 @@ references of Appendix~\ref{app:future}.
 
 \paragraph{The \pkmn{} TCG in Lean.} Ramos and Soria \cite{ramos-soria} describe a Lean~4
 development of the \pkmn{} TCG for metagame analysis. An LLM agent read their paper's arXiv HTML,
-about 80,000 of its 106,000 characters verbatim and the rest only as a summary. As that part
-describes it, the rules layer has zones, turns, deck legality, card-count conservation, Prize
-accounting and one card effect; we found there no step relation, damage semantics, effect language,
-or statement about finiteness or computability, and cannot say whether the unread part has one.
+about 80,000 of its 106,000 characters verbatim and the rest as a summary. In that part the rules
+layer has zones, turns, deck legality, card-count conservation, Prize accounting and one card
+effect, and no step relation, damage semantics, effect language, or statement about finiteness or
+computability; we cannot say whether the unread part has one.
 Their source sits behind a subscription login, so we cannot compare definitions.
 
 %======================================================================
 \section{Conclusion}\label{sec:conclusion}
 %======================================================================
 
-\paragraph{The finite side.} Two finiteness results hold for a Lean model of the \pkmn{} TCG.
-Tame decks with no stored reduction at the start have a finite clamped game with the same moves.
-Store-safe decks, which meet five decidable sufficient conditions, keep their stores bounded and have finitely many classes of a two-way
-bisimulation that keeps every modifier exact. None of the conditions can be dropped from this
-proof, though only for the second is the difference shown in play.
+\paragraph{The finite side.} For a Lean model of the \pkmn{} TCG, tame decks with no stored
+reduction at the start have a finite clamped game with the same moves, and store-safe decks have
+bounded stores and finitely many classes of a two-way bisimulation that keeps every modifier exact.
+None of the five conditions can be dropped from this proof; only for the second is the difference
+shown in play.
 
 \paragraph{The universal side.} For decks that no printed card supplies, the same model simulates
 every two-counter machine: a halt marker is reachable by some sequence of legal moves if and only if
-the machine halts. These decks meet four of the conditions and violate the second, and they use
-further generality that printed cards lack (Section~\ref{sec:counter-generality}); they show that the
-second condition cannot be dropped, not that every deck violating it is universal. With Minsky's
-theorem, cited and not formalised, reachability of the halt marker over these starts is undecidable.
+the machine halts. With Minsky's theorem, cited and not formalised, this reachability is
+undecidable.
 
-\paragraph{The printed card pool.} Every game built only from the 1,233 imported cards of the
-Standard pool meets the five clauses of \lean{StoreSafe}, vacuously
-(machine-checked). No proof ties a term to its card; LLM agents, and no human, compared
-the terms with the printed cards. The other 928 Standard cards and all cards outside it are open.
+\paragraph{The printed card pool.} Every game built only from the 1,377 imported cards of the
+Standard pool meets the five clauses of \lean{StoreSafe} (machine-checked), three of them
+vacuously. No proof ties a term to its card; LLM agents, and no human, compared them. The other 784
+Standard cards and all cards outside Standard are open.
 A survey of 20,776 English card records found no unbounded store that persists across turns
 and that card text reads beyond a yes-or-no test.
 
-\paragraph{Conjecture.} We conjecture that the printed \pkmn{} TCG is not Turing complete for
-decks with no recycling loop within a turn, and that token Energy makes the model universal
-(Conj.~\ref{conj:token}).
+\paragraph{Conjecture.} The printed \pkmn{} TCG is not Turing complete for decks with no
+recycling loop within a turn, and token Energy makes the model universal (Conj.~\ref{conj:token}).
 
 \paragraph{Availability.} The Lean development is public \cite{lean-pokemon}: the model in
 \texttt{Pokemon/}, the construction in \texttt{Pokemon/Counter.lean}, and the imported cards in the
@@ -1481,11 +1472,14 @@ Imprison, tests on Benched \pkmn{}'s markers, and marker-like states such as del
 
 \paragraph{5. What effects read.} Tests read either Active \pkmn{}'s damage, Special Conditions,
 markers, type, printed card, Tool, \lean{movedUp} and evolution this turn; counts read cards in
-zones, Prize cards, Benched \pkmn{}, \pkmn{} in play, attached Energy and the Knock Out record. No test
+zones, Prize cards left or taken, Benched \pkmn{}, \pkmn{} in play, attached Energy, Tools and Energy
+types, Special Conditions, the Supporter flag and the Knock Out record. No test
 reads a Benched \pkmn{}'s damage, Poison strength, HP, the modifiers in effect, or history beyond the
 record. A Benched \pkmn{}'s damage is read only by \lean{benchHeal} and \lean{moveCounter}, on the
-player's own \pkmn{}, and both clamps keep these reads exact. Absent: name-prefix filters, reads of
-the defender's Retreat Cost. A type filter reads the printed type, not a Coloring marker, and ``has
+player's own \pkmn{}, and both clamps keep these reads exact. Name filters compare UTF-8 bytes;
+\lean{prizesTaken} is 6 less the Prize cards left, exact from a 6-Prize set-up only. Absent: counts
+of damage on several \pkmn{}, of a Retreat Cost or of cards moved ``in this way'', and reads of the
+defender's Retreat Cost. A type filter reads the printed type, not a Coloring marker, and ``has
 an Ability'' ignores Tool-given Abilities.
 
 \paragraph{6. Damage, healing and switching.} Effects place damage counters on either Active
@@ -1502,8 +1496,9 @@ Trainer effects have no damage step.
 \paragraph{7. Lingering modifiers.} Each player has a bonus, a reduction, a prevention and locks on
 attacking, retreating and playing Items, for four slots; amounts add without limit, and modifiers
 belong to a player and survive evolution, which by the rulebook ends them (p.~11; both
-directions). The bonus enters at step 2 and the reduction at step 5. Absent: threshold
-prevention, prevention of effects, other locks, ``attack twice'', ``take another turn'', damage
+directions). The bonus enters at step 2 and the reduction at step 5. The per-\pkmn{} attack lock
+(\lean{InPlay.lk}) ends on a move to the Bench and on evolution, as printed; a card written with the
+per-player lock keeps the departure. Absent: threshold prevention, prevention of effects, other locks, ``attack twice'', ``take another turn'', damage
 taken last turn as an amount.
 
 \paragraph{8. General primitives.} \lean{ite}, \lean{scale}, \lean{selfDamage}, \lean{healAll},
@@ -1555,8 +1550,9 @@ Knock Outs at Checkup are recorded in no turn (forbids some for ``Knocked Out du
 opponent's last turn''); ``by damage from an attack'' includes damage counters
 an attack's effect placed; a Knock Out after a failed Confused attempt or by recoil is recorded as
 after an attack. A promotion after a Knock Out of the player's own Active \pkmn{} in their own turn
-does not set \lean{movedUp}. Absent: the played Supporter's name, attacks used last turn, per-\pkmn{}
-attack locks, healing this turn, next-turn per-\pkmn{} triggers, Prize cards taken last turn.
+does not set \lean{movedUp}. The lock \lean{this} forbids every self-locking attack of its \pkmn{},
+a Tool's included; an attack that may switch its user out sets none.
+Absent: the played Supporter's name, attacks used last turn, healing this turn, next-turn per-\pkmn{} triggers, Prize cards taken last turn.
 
 %======================================================================
 \section{State inventory and survey statistics}\label{app:inventory}\label{app:survey}
@@ -1614,8 +1610,8 @@ written in the root file \texttt{Pokemon.lean}, which contains only imports, is 
 library has its own gate in \texttt{PokemonCards/Audit.lean}.
 
 \paragraph{Counts and reproduction basis.} At the audited commit the gates print ``\texttt{audit:
-1346 theorems (+2751 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for \lean{Pokemon} and
-``\texttt{audit: 252 theorems (+218 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for
+1387 theorems (+2796 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for \lean{Pokemon} and
+``\texttt{audit: 277 theorems (+243 generated), axioms $\subseteq$ \{propext, Quot.sound\}}'' for
 \lean{PokemonCards}. The basis is the continuous-integration run of that commit, whose two jobs build
 the libraries and require each gate's success line, and a local clean build with no warnings.
 
@@ -1736,20 +1732,6 @@ structure KOHist where
   lastAtk : Bool
 \end{lstlisting}
 \end{multicols}
-Spread (in namespace \lean{Pokemon.Spread}, the definition in \lean{Pokemon}):
-\begin{lstlisting}
-def Effect.spreadAny (bench : Bool) (n : Nat) : Effect :=
-  if bench then (Effect.benchCounters .opp 1).rep n
-  else Effect.spreadOne.rep n
-
-theorem spreadAny_sound {g g' : GameState} {p : InPlay} {n : Nat} (hp : g.opp.active = some p)
-    (h : Run (Effect.spreadAny false n) g g') :
-    ∃ d k b', d + k = n ∧ BenchAdd k g.opp.bench b' ∧ g' = g.withOpp (p.addDamage d) b'
-theorem spreadAny_complete {g : GameState} {p c : InPlay} {n d k : Nat} {b' : List InPlay}
-    (hc : g.cur.active = some c) (hp : g.opp.active = some p) (hn : d + k = n)
-    (hb : BenchAdd k g.opp.bench b') :
-    Run (Effect.spreadAny false n) g (g.withOpp (p.addDamage d) b')
-\end{lstlisting}
 The turn (Theorem~\ref{thm:turn}) and Knock Out timing (Section~\ref{sec:kotiming}):
 \begin{theorem}[\lean{Move.after\_attack}, \lean{Reach.flagsOk}, \lean{Move.firstTurn\_no\_attack}]\label{thm:turn}
 After an attack a move is the batch move with its triggers or passes the turn; play preserves
@@ -1765,24 +1747,6 @@ theorem Move.firstTurn_no_attack {g g' : GameState} (hc : g.FlagsOk) (hf : g.fir
 \end{lstlisting}
 \end{theorem}
 \begin{lstlisting}
-theorem Reach.knockOut_of_pending {g₀ g : GameState} (h₀ : WellFormed g₀) (h : Reach g₀ g)
-    (hn : g.winner = none) (hk : ¬ DamageBounded g) :
-    ∃ g₁ g', Move g g' ∧ KOBatch g g₁ ∧
-      (∃ l, l.Perm (g.batchTrigs g₁) ∧ Fire .koByAttack l g₁ g') ∧ (g.attacked = false → g' = g₁) ∧
-      0 < g.koVal .own + g.koVal .opp ∧
-      g₁.cur.prizes = g.cur.prizes.drop (g.koVal .opp) ∧
-      g₁.opp.prizes = g.opp.prizes.drop (g.koVal .own) ∧
-      g₁.cur.discard = (g.koOf .own).discard ∧ g₁.opp.discard = (g.koOf .opp).discard ∧
-      (∀ w sp x, g₁.In w sp x → ∃ sp₀, g.In w sp₀ x ∧ x.damage < g.hpOf w sp₀ x)
-theorem Move.pending_knockedOut {g g' : GameState} {p : InPlay} (hm : Move g g') :
-    (g.cur.active = some p → g.hpOf .own .active p ≤ p.damage →
-        ∃ g₁, KOBatch g g₁ ∧ (∃ l, g₁.cur.discard = p.cardList ++ l ++ g.cur.discard) ∧
-          (∃ ts, ts.Perm (g.batchTrigs g₁) ∧ Fire .koByAttack ts g₁ g') ∧
-          g'.curIsFirst = g.curIsFirst) ∧
-      (g.opp.active = some p → g.hpOf .opp .active p ≤ p.damage →
-        ∃ g₁, KOBatch g g₁ ∧ (∃ l, g₁.opp.discard = p.cardList ++ l ++ g.opp.discard) ∧
-          (∃ ts, ts.Perm (g.batchTrigs g₁) ∧ Fire .koByAttack ts g₁ g') ∧
-          g'.curIsFirst = g.curIsFirst)
 theorem TRun.settled_or_won {e : Effect} {g g' : GameState} (h : TRun e g g')
     (hs : Settled g ∨ g.winner ≠ none) : Settled g' ∨ g'.winner ≠ none
 theorem Reach.perm {g₀ g : GameState} (h : Reach g₀ g) : g.allCards.Perm g₀.allCards
@@ -1961,6 +1925,7 @@ Switching off Resistance or step 5, with Weakness kept, never lowers the damage 
 Static prevention is computed, never stored, and protects the Active Spot only; a prevented attack fires no trigger & by definition; machine-checked (witness) & Sec.~\ref{sec:vocab2} \\
 Retreat may discard any choice of the attached Energy & by definition; machine-checked (witnesses) & Sec.~\ref{sec:moves} \\
 The Knock Out record takes 16 values; every finiteness theorem holds with it & machine-checked & Sec.~\ref{sec:vocab2} \\
+The new counts are kept by both clamps; one trace shows an attack lock set, in force and cleared & machine-checked (witness) & Sec.~\ref{sec:vocab2} \\
 For place-one, remove-all and ``has any'', a flag answers as the count does & machine-checked (abstract) & Sec.~\ref{sec:markers} \\
 No card counts Imprison or Shock-wave markers or removes one at a time & surveyed; assumed & Sec.~\ref{sec:survey} \\
 Some states are reachable from themselves by Ability moves & machine-checked (witnesses) & Sec.~\ref{sec:abilities} \\
@@ -1973,7 +1938,6 @@ Every deck: the exact-store clamp is a two-way bisimulation & machine-checked & 
 Store-safe starts: stores bounded by \lean{storeBound}; finite list; bisimulation & machine-checked & Thm.~\ref{thm:xfinite} \\
 Without clause 1, 3, 4 or 5 the stores are unbounded and the exact-store classes infinite & machine-checked (representation) & Table~\ref{tab:clauses} \\
 Without clause 2 the exact-store classes can be infinite (\lean{countUp}); halt-marker reachability encodes halting & machine-checked (representation; play) & Table~\ref{tab:clauses} \\
-No witness start of these theorems or of Thm.~\ref{thm:universal} is a legal 60-card deck & by definition & Sec.~\ref{sec:negatives} \\
 A Stadium that returns a writer every turn is store-safe & machine-checked & Sec.~\ref{sec:negatives} \\
 Unrestricted recycling yields a counter machine & open & Sec.~\ref{sec:negatives} \\
 Neither the tame nor the store-safe class contains the other & argued & Sec.~\ref{sec:finite-scope} \\
@@ -1985,13 +1949,13 @@ The starts satisfy clauses 1, 3, 4, 5 and violate clause 2 if the first instruct
 Reachability of the halt marker over these starts is undecidable & reduction machine-checked; Minsky cited & Sec.~\ref{sec:counter-what} \\
 For one witness, states are infinite up to any equivalence that recovers the configuration & machine-checked (representation) & Sec.~\ref{sec:counter-what} \\
 \multicolumn{3}{@{}l}{\emph{The imported cards}} \\
-1,227 distinct terms, 6 shared, 928 refused; the three list lengths sum to 2161 & machine-checked (2161 is a literal; that it is the pool's size is checked outside Lean) & Sec.~\ref{sec:importer} \\
+1,370 distinct terms, 7 shared, 784 refused; the three list lengths sum to 2161 & machine-checked (2161 a literal, checked outside Lean) & Sec.~\ref{sec:importer} \\
 The lists partition the pool & checked outside Lean & Sec.~\ref{sec:importer} \\
 Every game built only from imported terms meets the five clauses of \lean{StoreSafe}; Thm.~\ref{thm:xfinite} applies & machine-checked & Thm.~\ref{thm:importer} \\
-The clauses hold vacuously there: 27 carried writers, none rest-of-game or in an Ability, Stadium or Item; no \lean{iter} & machine-checked (listings); counted by script (slots, \lean{iter}, Stadiums) & Sec.~\ref{sec:importer} \\
+28 writers, none rest-of-game, an Item or a Stadium; clauses 1, 2, 5, 3(b) vacuous, 3(a) and 4 not & machine-checked (listings); script (slots, recyclers) & Sec.~\ref{sec:importer} \\
 No imported Stadium or Tool is inert; imported triggers fire in the fragment; 28 terms untame & machine-checked & Sec.~\ref{sec:importer} \\
 The same with over-approximated Iron Defender and Premium Power Pro & machine-checked & Sec.~\ref{sec:importer} \\
-Each imported term says what its card says, up to its caveats & read (LLM agents; two rounds one reader); not verified & Sec.~\ref{sec:importer} \\
+Each imported term says what its card says, up to its caveats & read (LLM agents; two rounds and 13 cards one reader); not verified & Sec.~\ref{sec:importer} \\
 In the pool, every \pkmn{} with a Rule Box is a \pkmn{} ex & checked in the card data & Sec.~\ref{sec:standard} \\
 The Standard pool satisfies the five clauses & not proved & Sec.~\ref{sec:importer} \\
 \multicolumn{3}{@{}l}{\emph{The printed game}} \\
@@ -2013,21 +1977,17 @@ An effect attaching Energy backed by no card would make the model universal & co
 \section{Future work}\label{app:future}
 %======================================================================
 
-The importer's blockers (Table~\ref{tab:blockers}) order the model's next milestones by yield;
-per-\pkmn{} modifiers, stacking limits, Bench size, set-up and deck legality have no blocker count.
-Attacking twice and returns from play are needed for the full Standard pool, and each reopens the
-store bound. Alongside: a human-read stratified sample of the translations with an error bound; a
-search for tests on Poison strength; a tight HP bound (\lean{hpOf\_le\_120} gives 290,438); the decidability
+Open work: the model gaps of Table~\ref{tab:blockers}, by yield; a human-read stratified sample of the translations with an error bound; a
+search for tests on Poison strength; a tight HP bound (\lean{hpOf\_le\_120} gives 726,038); the decidability
 conjecture of Section~\ref{sec:finite-scope}; and quantitative questions, such as whether the first
 player's winning probability exceeds a given $p$, which finiteness does not settle, since the
 threshold problem for probabilistic finite automata is undecidable
 \cite{nasu-honda,paz,condon-lipton,blondel-canterini,rote-pfa}.
 
-\paragraph{A second route (argued).} Hold a register $c$ as a carried reduction; the player plays $m$
-times a replayable effect that adds 1 to this turn's bonus and $k$ to a carried slot, and an attack
-that must do exactly $n$ damage forces $m = c$, leaving $k \cdot c$. With a zero test this gives a
-universal one-register machine \cite{minsky}. The argument, which no second agent has checked,
-needs the two writes coupled in one replayable effect; clauses 1 and 3--5 exclude it, and no
-Standard card couples two durations.
+\paragraph{A second route (argued).} Hold a register $c$ as a carried reduction. If $m$ plays of
+a replayable effect add 1 to this turn's bonus and $k$ to a carried slot, an attack that must do
+exactly $n$ damage forces $m = c$ and leaves $k \cdot c$; with a zero test this gives a universal
+one-register machine \cite{minsky}. The argument (no second agent checked it) needs the two writes
+coupled in one replayable effect: clauses 1 and 3--5 exclude it; no Standard card has it.
 
 \end{document}
