@@ -12,7 +12,7 @@ were produced with large language model agents directed by the author, as the pa
 "Provenance and use of AI" paragraph states. The draft has been reviewed only by such agents, not
 by human referees. Some bibliography entries are marked unverified in `refs.bib`. The
 machine-checked results it describes live in
-[sigilante/lean-pokemon](https://github.com/sigilante/lean-pokemon) (audited commit fa4ab0e);
+[sigilante/lean-pokemon](https://github.com/sigilante/lean-pokemon) (audited commit 736cc1c);
 where the paper and the Lean source disagree, the Lean source is authoritative.
 
 Build: `latexmk -pdf mss.tex`. A compiled `mss.pdf` is kept in the repository and rebuilt with each change to the source.
