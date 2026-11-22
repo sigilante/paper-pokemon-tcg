@@ -1055,7 +1055,7 @@ clause 2 are finite by Theorem~\ref{thm:finite}.
 \paragraph{Undecidability.} The map $M \mapsto{}$\lean{start M a b} is an explicit definition, and
 by Theorem~\ref{thm:universal} it reduces the halting problem for two-counter machines to
 reachability of the halt marker. With Minsky's theorem \cite{minsky}, reachability of the halt marker
-over this family of starts is undecidable. The reduction is machine-checked; the appeal to Minsky's
+over these starts is undecidable. The reduction is machine-checked; the appeal to Minsky's
 theorem is not, and undecidability is not a Lean theorem. For any single machine a finite quotient
 that respects the halt question exists, non-constructively.
 
@@ -1080,7 +1080,7 @@ for unbounded HP, Knock Out prevention, game-long counts, unbounded markers and 
 the game; and a census that split the text into 36,239 sentences, reduced them to templates,
 assigned the templates to effect classes, and had an LLM agent read every distinct sentence the
 risk-class patterns selected (Appendix~\ref{app:survey}). A regular expression finds only the wordings it
-describes, so ``none found'' means none found by the stated patterns.
+describes, so ``none found'' means none found by the patterns.
 
 \paragraph{Findings.} Every HP modifier is a fixed amount from a card in play, a bonus scaled by a
 count of cards or Prizes, or a conditional fixed maximum; the largest printed HP is 380. No card
@@ -1109,7 +1109,7 @@ The pool has 3,402 card records. It lacks GX attacks, VSTAR Powers, rest-of-game
 turns, markers and the Lost Zone, so the universal construction's key ingredient does not occur in
 it. It has 34 cards that carry a damage reduction into the opponent's turn, such as the Item Iron
 Defender, and five attacks that heal by the damage done, so its decks are not tame in general and
-the store-safe theorem is the one that bears on them. It has four \pkmn{} that can attack twice
+the store-safe theorem bears on them. It has four \pkmn{} that can attack twice
 (through the Ability Festival Lead with the Stadium Festival Grounds) and Abilities that return a
 \pkmn{} from play.
 
@@ -1252,9 +1252,7 @@ Section~\ref{sec:standard} this supports the clause for Standard but does not pr
 refused cards, and every deck that mixes one in, lie outside the theorem.
 
 \paragraph{Why coverage stops at 57.1\%.} Table~\ref{tab:blockers} ranks the mechanisms that block
-the refused cards by the number of cards each blocks alone. Apart from a long tail of single-card
-wordings, prevention in attack text (of effects, by a threshold or by type) leads, then Special
-Energy, triggers of other shapes and name prefixes.
+the refused cards; after a tail of single-card wordings, prevention in attack text leads.
 
 \begin{table}[t]
 \centering
@@ -1301,26 +1299,16 @@ about play are cooperative play or a unique legal line enforced by locks.
 
 \paragraph{Why the construction does not run on printed cards.}\label{sec:linger-printed} The
 targeted reading found four rest-of-game templates: three from GX attacks and one Trainer that turns
-Prize cards face up. A player may use one GX attack per game, so each player's rest-of-game modifier
-takes at most one fixed value. None of the four is in the Standard pool. A deck-cycling
+Prize cards face up. One GX attack per game gives each player's rest-of-game modifier at most one fixed
+value. None of the four is in the Standard pool. A deck-cycling
 loop has existed in the Expanded format, after which Flapple was banned there \cite{flapple}; we have
 not checked whether it can replay a modifier card.
-
-\paragraph{A second route (argued).} Hold a register $c$ as a carried reduction; the player plays $m$
-times a replayable effect that adds 1 to this turn's bonus and $k$ to a carried slot, and an attack
-that must do exactly $n$ damage forces $m = c$, leaving $k \cdot c$. With a zero test this gives a
-universal one-register machine \cite{minsky}. The argument, which no second agent has checked,
-needs the two writes coupled in one replayable effect; clauses 1 and 3--5 exclude it, and no
-Standard card couples two durations.
 
 \paragraph{The open question.} Whether any finiteness theorem holds for the full Standard pool is
 open. A proof needs in the model what it lacks, led by the blockers of Table~\ref{tab:blockers}, and
 also stacking limits, Bench size, per-\pkmn{} modifiers, set-up, attacking twice and returns from
-play; attacking twice and returns from play each reopen the store bound. The current rulebook leaves
-open when Knock Outs are checked outside attacks and Checkup, whether a Knock Out at Checkup falls in
-the opponent's last turn, whether a Tool's Ability is the \pkmn{}'s, and who promotes first when
-both players must; the model decides each, and takes Prize cards from the top where the player
-chooses them.
+play; attacking twice and returns from play each reopen the store bound. Where the current rulebook leaves a question open,
+the model decides it (Appendix~\ref{app:departures}).
 
 \subsection{Conjecture and relaxations}\label{sec:conjecture}\label{sec:lattice}
 
@@ -1337,9 +1325,31 @@ moves up to that image.
 no injective map sends the configurations of a two-counter machine with infinitely many reachable
 configurations to classes of reachable states; in this sense the game is not Turing complete for
 them. For decks with a recycling loop within a turn the question is open. Of the rule changes that might make the game
-universal, only rest-of-game modifiers in attacks that are not GX attacks, with the generality of
+universal, only rest-of-game modifiers in non-GX attacks, with the generality of
 Section~\ref{sec:counter-generality}, have a machine-checked part; a coupled replayable writer is
-argued; unbounded HP and unbounded decks are conjectured routes under cooperative play.
+argued (Appendix~\ref{app:future}); unbounded HP and unbounded decks are conjectured routes under cooperative play.
+
+\begin{remark}[Energy]\label{rem:energy}
+Attached Energy is a count with an increment (\lean{attach}), a decrement (\lean{discardEnergy})
+and a zero test (\lean{countGe} on \lean{Count.energy}), which both clamps keep exact
+(\lean{Count.val\_clampAt}, \lean{Count.val\_xclampAt}). It is bounded: Energy is cards, so
+\lean{Reach.perm} (Theorem~\ref{thm:perm}) bounds the Energy in play by the Energy cards in the
+game. Returning Energy from a discard pile (\lean{attach} from \lean{Src.discard}, as printed cards
+do) moves the same cards: unbounded plays, not unbounded state. It is a count, not a stack: the
+player chooses which Energy to discard.
+\end{remark}
+
+\begin{conjecture}[token Energy]\label{conj:token}
+Extend the model by one effect that attaches to a \pkmn{} an Energy backed by no card, from an
+inexhaustible supply. Then for every two-counter machine $M$ some well-formed start of the extended
+model reaches a halt marker by some sequence of legal moves of the two players if and only if $M$
+halts, with the Energy counts of two \pkmn{} as the registers.
+\end{conjecture}
+\noindent Nothing here is constructed or checked: the finite control and the forcing of the zero
+branch are not worked out; no printed card has such an effect; the extension removes conservation, on which well-formedness and both finiteness theorems rest. If it holds, the boundary
+may lie at card-backing: in the model every exactly readable quantity not capped by HP is backed by
+cards, damage and Poison strength are capped by an HP the cards bound, and stored modifiers are
+read by no test.
 
 %======================================================================
 \section{Related work}\label{sec:related}
@@ -1363,8 +1373,8 @@ model it is proved for, which is why we mechanize the model and list its departu
 \paragraph{How these works were read.} An LLM agent did the literature search. It read
 \cite{cbh-mtg,ygo,riftbound} in full, only the abstracts of \cite{biderman-arith,bosboom-netrunner,zhang-hearthstone},
 only search summaries of \cite{uno,dewynter-civ,nintendo-hard,netrunner-tc}, and nothing of
-\cite{yin-churchill}; what we say of them rests on that. The probabilistic-automata references of
-Appendix~\ref{app:future} were not part of the search.
+\cite{yin-churchill}; what we say of them rests on that. It did not search for the automata
+references of Appendix~\ref{app:future}.
 
 \paragraph{The \pkmn{} TCG in Lean.} Ramos and Soria \cite{ramos-soria} describe a Lean~4
 development of the \pkmn{} TCG for metagame analysis. An LLM agent read their paper's arXiv HTML,
@@ -1392,14 +1402,15 @@ second condition cannot be dropped, not that every deck violating it is universa
 theorem, cited and not formalised, reachability of the halt marker over these starts is undecidable.
 
 \paragraph{The printed card pool.} Every game built only from the 1,233 imported cards of the
-Standard pool meets the five clauses of \lean{StoreSafe}, vacuously, a kernel-checked fact about the
-generated terms. No proof ties a term to its card; LLM agents compared the terms with the printed
-cards, and no human has. The other 928 Standard cards and everything outside Standard are
-open. A survey of 20,776 English card records found no unbounded store that persists across turns
+Standard pool meets the five clauses of \lean{StoreSafe}, vacuously
+(machine-checked). No proof ties a term to its card; LLM agents, and no human, compared
+the terms with the printed cards. The other 928 Standard cards and all cards outside it are open.
+A survey of 20,776 English card records found no unbounded store that persists across turns
 and that card text reads beyond a yes-or-no test.
 
 \paragraph{Conjecture.} We conjecture that the printed \pkmn{} TCG is not Turing complete for
-decks with no recycling loop within a turn.
+decks with no recycling loop within a turn, and that token Energy makes the model universal
+(Conj.~\ref{conj:token}).
 
 \paragraph{Availability.} The Lean development is public \cite{lean-pokemon}: the model in
 \texttt{Pokemon/}, the construction in \texttt{Pokemon/Counter.lean}, and the imported cards in the
@@ -1988,11 +1999,13 @@ No unbounded HP, Knock Out immunity, game-long count or card from outside the ga
 No unbounded store that persists across turns and is read beyond a yes-or-no test & surveyed (English) & Sec.~\ref{sec:survey} \\
 Standard is regulation marks H, I, J and Basic Energy & assumption & Sec.~\ref{sec:standard} \\
 In Standard no within-turn loop plays a card and no card couples two durations & surveyed (one reader) & Sec.~\ref{sec:standard} \\
-A coupled replayable writer gives universality & argued (unverified) & Sec.~\ref{sec:open} \\
+A coupled replayable writer gives universality & argued (unverified) & App.~\ref{app:future} \\
 Finiteness for the full Standard pool & open & Sec.~\ref{sec:open} \\
 Decks with no within-turn recycling loop have a finite capped game & conjectured & Conj.~\ref{conj:main} \\
 The printed game is not Turing complete for decks with a within-turn recycling loop & open & Sec.~\ref{sec:conjecture} \\
 Unbounded HP or deck size would make the game universal & conjectured & Sec.~\ref{sec:conjecture} \\
+Attached Energy is exactly readable and bounded by the Energy cards in the game & argued (from machine-checked lemmas; unverified) & Rem.~\ref{rem:energy} \\
+An effect attaching Energy backed by no card would make the model universal & conjectured & Conj.~\ref{conj:token} \\
 \end{xltabular}
 }
 
@@ -2009,5 +2022,12 @@ conjecture of Section~\ref{sec:finite-scope}; and quantitative questions, such a
 player's winning probability exceeds a given $p$, which finiteness does not settle, since the
 threshold problem for probabilistic finite automata is undecidable
 \cite{nasu-honda,paz,condon-lipton,blondel-canterini,rote-pfa}.
+
+\paragraph{A second route (argued).} Hold a register $c$ as a carried reduction; the player plays $m$
+times a replayable effect that adds 1 to this turn's bonus and $k$ to a carried slot, and an attack
+that must do exactly $n$ damage forces $m = c$, leaving $k \cdot c$. With a zero test this gives a
+universal one-register machine \cite{minsky}. The argument, which no second agent has checked,
+needs the two writes coupled in one replayable effect; clauses 1 and 3--5 exclude it, and no
+Standard card couples two durations.
 
 \end{document}
