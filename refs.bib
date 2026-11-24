@@ -1,11 +1,14 @@
 % refs.bib for the Pokemon TCG finiteness draft.
 % Checked against primary sources on 2026-11-21 (arXiv abstract/HTML pages, LIPIcs/Dagstuhl,
-% Crossref, publisher pages, the documents themselves). Fields that could not be checked
+% Crossref, publisher pages, the documents themselves). Reading status of the prior-art works updated
+% from survey S21 (2026-11-25), whose PDFs are stored under ../data/papers/. Fields that could not be checked
 % carry a "% UNVERIFIED:" comment.
 
 % ---------------------------------------------------------------- card-game computability
 
 % Primary source: LIPIcs page (Dagstuhl) and arXiv abs/1904.09828 (cs.AI; v1 24 Mar 2019, v2 23 Apr 2019).
+% Read in full by an LLM agent (survey S21, 2026-11-25): the arXiv v2 text (8 pp), data/papers/cbh-mtg/;
+% the 19-page LIPIcs text was not read.
 % The Dagstuhl page lists publication date 2020-09-16 and some citations say 2020;
 % the proceedings are FUN 2021, kept as year.
 @inproceedings{cbh-mtg,
@@ -22,6 +25,7 @@
 }
 
 % arXiv abs/2003.05119 (cs.AI), submitted 11 Mar 2020; no journal reference listed.
+% Read in full by an LLM agent (S21, 2026-11-25): arXiv v1, 13 pp; p. 9 names the Pokemon TCG.
 @misc{biderman-arith,
   author = {Biderman, Stella},
   title  = {Magic: the Gathering is as Hard as Arithmetic},
@@ -29,7 +33,8 @@
   note   = {arXiv:2003.05119 [cs.AI], preprint}
 }
 
-% Dagstuhl/LIPIcs page for FUN 2024.
+% Dagstuhl/LIPIcs page for FUN 2024. Read in full by an LLM agent (S21, 2026-11-25): the LIPIcs PDF,
+% 19 pp; the linked "full version" was not obtained.
 @inproceedings{yin-churchill,
   author    = {Yin, Howe Choong and Churchill, Alex},
   title     = {A Programming Language Embedded in {Magic: The Gathering}},
@@ -43,7 +48,7 @@
 }
 
 % arXiv abs/2603.02863 (math.LO; cross-lists cs.CC, cs.GT). v1 3 Mar 2026, v2 11 Mar 2026.
-% No journal reference listed: preprint.
+% No journal reference listed: preprint. Read in full by an LLM agent (S1; again in S21): arXiv v2, 15 pp.
 @misc{ygo,
   author = {Nicolosi, Orazio and Pisciotta, Federico and Bresolin, Lorenzo},
   title  = {Deciding winning strategies in {Yu-Gi-Oh!} {TCG} is hard},
@@ -52,6 +57,7 @@
 }
 
 % arXiv abs/2609.33839 (cs.CC). v1 27 Sep 2026, v2 30 Sep 2026. No journal reference: preprint.
+% Read in full by an LLM agent (S1); pp. 1-14 of 17 again in S21 (2026-11-25).
 @misc{riftbound,
   author = {Dalaklis, Nathan and Fields, Beckett},
   title  = {Riftbound is {Turing} Complete},
@@ -61,6 +67,8 @@
 
 % arXiv abs/2607.08692 (cs.GT, cross-list cs.FL), submitted 9 Jul 2026; no journal reference.
 % Artifact is reference [44] of the paper (IEEE DataPort, DOI below); its Lean source was not inspected.
+% The arXiv v1 PDF (13 pp) was read in full by an LLM agent (S21, 2026-11-25). The paper describes the
+% source as anonymized supplementary material (p. 12).
 @misc{ramos-soria,
   author = {Ramos, Arthur F. and Soria, Tulio},
   title  = {From Rules to {Nash} Equilibria: A {Lean}~4 Case Study in Game-Theoretic Analysis
@@ -71,17 +79,22 @@
             matrices, and {Lean}~4 proof artifact'', IEEE DataPort, doi:10.21227/vty8-p429}
 }
 
-% Forum thread (OP username "callforjudgement"), forum.stimhack.com, posted 2023-07-30; read 2026-11-21.
-% UNVERIFIED: the blog repost at logic-bomb.net (2023-08-26) and the linked proof text were not opened.
+% The article (byline "By ais523 (aka callforjudgement)"; no date on the page) was read in full by an LLM
+% agent (S21, 2026-11-25), with the forum thread (Discourse JSON, 4 posts; announced 2023-07-30) and the
+% logic-bomb.net repost (2023-08-26); local copies in data/papers/netrunner-tc/. The phrase
+% "make this choice or lose" is a forum reply by another user, not the author's.
 @misc{netrunner-tc,
-  author = {{callforjudgement (forum username)}},
-  title  = {Netrunner is {Turing} complete},
+  author = {{ais523 (also posting as callforjudgement)}},
+  title  = {Netrunner is {Turing}-complete},
   year   = {2023},
-  howpublished = {StimHack forum, \url{https://forum.stimhack.com/t/netrunner-is-turing-complete/11190}},
-  note   = {Posted 2023-07-30; accessed 2026-11-21. Self-published, not peer reviewed. Blog repost: logic-bomb.net, 2023-08-26}
+  howpublished = {\url{http://ais523.me.uk/articles/netrunner-is-turing-complete.html}},
+  note   = {Undated article, announced 2023-07-30 on the StimHack forum,
+            \url{https://forum.stimhack.com/t/netrunner-is-turing-complete/11190}; accessed
+            2026-11-25. Self-published, not peer reviewed}
 }
 
 % arXiv abs/1710.05121 (cs.CC), submitted 14 Oct 2017; no journal reference listed.
+% Read in part by an LLM agent (S21, 2026-11-25): v1, pp. 1-3 and the theorem statements.
 @misc{bosboom-netrunner,
   author = {Bosboom, Jeffrey and Hoffmann, Michael},
   title  = {Netrunner Mate-in-1 or -2 is Weakly {NP}-Hard},
@@ -91,6 +104,7 @@
 
 % arXiv abs/2305.12731 (cs.CC), submitted 22 May 2023; no journal reference listed.
 % (The notes had a hyphen, "PSPACE-hard", and "Perfect-Information"; the arXiv title is as below.)
+% Read in part by an LLM agent (S21, 2026-11-25): v1, pp. 1-4 and the theorem.
 @misc{zhang-hearthstone,
   author = {Zhang, Zhujun},
   title  = {Perfect Information {Hearthstone} is {PSPACE}-hard},
@@ -102,6 +116,8 @@
 % The arXiv version (arXiv:1003.2851, current title "The complexity of UNO", cs.DM) and the FUN 2010
 % version (LNCS 6099, pp. 133--144) list Nicholas J. A. Harvey as a sixth author; the journal version does not.
 % UNVERIFIED: volume/pages/DOI taken from the authors' page and a search summary, not the publisher page (403/429).
+% Read in part by an LLM agent (S21, 2026-11-25): the arXiv v3 text ("The complexity of UNO", six
+% authors), pp. 1-3 and the theorem statements; the journal text was not obtained.
 @article{uno,
   author  = {Demaine, Erik D. and Demaine, Martin L. and Uehara, Ryuhei and Uno, Takeaki and Uno, Yushi},
   title   = {{UNO} is hard, even for a single player},
@@ -114,7 +130,8 @@
 }
 
 % arXiv abs/2104.14647 gives IEEE Trans. Games 15(2), June 2023, DOI 10.1109/TG.2022.3166874.
-% UNVERIFIED: pages 292--299 carried over from the first draft; IEEE page could not be read.
+% Pages 292--299 confirmed by the Crossref record (2026-11-25). Read in full by an LLM agent (S21): the
+% arXiv v1 text (15 pp); the 8-page IEEE text was not obtained.
 @article{dewynter-civ,
   author  = {de Wynter, Adrian},
   title   = {Turing Completeness and {Sid Meier's Civilization}},
@@ -128,6 +145,7 @@
 }
 
 % Crossref (journal), arXiv abs/1203.1895 (v1 8 Mar 2012). Video games, not the card game.
+% Read in part by an LLM agent (S21, 2026-11-25): arXiv v3, pp. 1-2 and 31-34.
 @article{nintendo-hard,
   author  = {Aloupis, Greg and Demaine, Erik D. and Guo, Alan and Viglietta, Giovanni},
   title   = {Classic {Nintendo} Games are (Computationally) Hard},
@@ -214,7 +232,7 @@
   doi     = {10.1007/s00224-003-1061-2}
 }
 
-% arXiv abs/2412.05198 (cs.FL), submitted 6 Dec 2024.
+% arXiv abs/2412.05198 (cs.FL), submitted 6 Dec 2024. Read in part (pp. 1-4) by an LLM agent (S21).
 @misc{rote-pfa,
   author = {Rote, G{\"u}nter},
   title  = {Probabilistic Finite Automaton Emptiness is Undecidable for a Fixed Automaton},
@@ -233,7 +251,7 @@
   title        = {Pok\'emon Trading Card Game Rules},
   year         = {2024},
   howpublished = {\url{https://media.pocketmonsters.net/pdf/TCG/ssp_rulebook_en.pdf}},
-  note         = {PDF file name \texttt{ssp\_rulebook\_en.pdf}; accessed 2026-11-21}
+  note         = {Accessed 2026-11-21}
 }
 
 % Survey S14: read in full as text (pdftotext); first page "LAST UPDATED: NOVEMBER 2026"; local copy
