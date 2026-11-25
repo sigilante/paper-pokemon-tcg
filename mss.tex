@@ -4,7 +4,7 @@
 % should trace to one of these. Lean statements are copied verbatim from the source; do not
 % edit them by hand -- re-copy them. The revision history of this manuscript is in git.
 
-\documentclass[11pt]{article}
+\documentclass[11pt]{amsart}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -23,14 +23,12 @@
 \setlength{\emergencystretch}{3em}
 % Let long URLs in the bibliography break at any character.
 \makeatletter\g@addto@macro{\UrlBreaks}{\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z\do\-}\makeatother
-% Headings with less space around them than the article defaults.
+% Section headings are amsart's; paragraphs are bold run-in headings.
 \makeatletter
-\renewcommand\section{\@startsection{section}{1}{\z@}{-2.5ex \@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\Large\bfseries}}
-\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-2.25ex\@plus -1ex \@minus -.2ex}{1ex \@plus .2ex}{\normalfont\large\bfseries}}
 \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{1.5ex \@plus .5ex \@minus .2ex}{-1em}{\normalfont\normalsize\bfseries}}
 \makeatother
 \hypersetup{pdftitle={A Mechanized Model of the Pok\'emon TCG: Finite Quotients for Restricted Decks and a Counter-Machine Embedding},
-  pdfauthor={N. E. Davis (Sigilante)}}
+  pdfauthor={Claude Opus with N. E. Davis}}
 
 \newcommand{\pkmn}{Pok\'emon}
 \newcommand{\lean}[1]{\texttt{#1}}
@@ -92,13 +90,14 @@
     {⟩}{{$\rangle$}}1,
 }
 
-\title{A Mechanized Model of the \pkmn{} TCG:\\ Finite Quotients for Restricted Decks\\ and a Counter-Machine Embedding}
-\author{N. E. Davis (Sigilante)}
-\date{}
+\title[A Mechanized Model of the Pok\'emon TCG]{A Mechanized Model of the Pok\'emon TCG:\\ Finite Quotients for Restricted Decks\\ and a Counter-Machine Embedding}
+\author{Claude Opus with N.\ E.\ Davis}
+\address{ZeroAttest, Champaign, Illinois, USA}
+\email{NDavis@ZeroAttest.com}
+\urladdr{https://orcid.org/0000-0002-1131-8319}
+\date{\today}
 
 \begin{document}
-\maketitle
-
 \begin{abstract}
 Magic: The Gathering, and in preprints Yu-Gi-Oh!\ and Riftbound, embed universal computation under
 stated assumptions about play. We ask whether the \pkmn{} Trading Card Game does, for a Lean~4 model
@@ -118,6 +117,9 @@ write, no Item that writes); the other admits one once-per-turn Ability that wri
 the translations and found no error; no human has read the rest. We conjecture that the printed game is not Turing complete for decks with
 no recycling loop within a turn.
 \end{abstract}
+
+\keywords{trading card games, Turing completeness, counter machines, finite-state abstraction, formalization, Lean}
+\maketitle
 
 \noindent{\small\copyright{} 2026 N.~E.~Davis (Sigilante). The author's own text, tables and figures are licensed under the Creative Commons Attribution 4.0 International licence (CC~BY~4.0), \url{https://creativecommons.org/licenses/by/4.0/}.
 The Lean model, the importer, the surveys and this manuscript were written by large language model
@@ -1476,16 +1478,21 @@ decks with no recycling loop within a turn (Conjecture~\ref{conj:main}), and tha
 attaching Energy backed by no card would make the model universal (Conjecture~\ref{conj:token}); the
 second is not constructed.
 
-\paragraph{Availability.} The Lean development, with the imported cards (\texttt{PokemonCards}) and
-the importer, is public \cite{lean-pokemon}; the survey files and census scripts are not.
-
-\paragraph{Provenance and use of AI.}\label{sec:provenance} The Lean model, the importer, the
+\paragraph{Provenance and use of AI}\label{sec:provenance} The Lean model, the importer, the
 surveys and this manuscript were written by large language model agents (Anthropic's Claude models)
 directed by the author, who set the questions and the scope and made the decisions. Further runs
 of such agents with reviewer prompts (called ``Wizard'', ``Grammarian'' and similar in the project),
 not human referees, reviewed the Lean development and this manuscript adversarially. The author has
 read 20 of the 1,492 card translations against the printed cards, and no human has read the others. The proofs are checked by the Lean kernel,
 which is the only verification independent of this process.
+
+\section*{Data availability}
+The Lean development, with the imported cards (\texttt{PokemonCards}) and the importer, is public
+\cite{lean-pokemon}; this paper cites commit \texttt{05a38b3}. Every theorem is covered by the
+repository's axiom gate, which fails the build if a result depends on an axiom other than
+\texttt{propext} and \texttt{Quot.sound}. The paper's repository holds the listing check and the
+sheet of the author's 20-card reading (\texttt{review/}). The survey files and census scripts are
+not public.
 
 \bibliographystyle{plain}
 \bibliography{refs}
