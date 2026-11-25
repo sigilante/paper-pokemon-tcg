@@ -18,7 +18,7 @@ Units: the model counts damage and HP in tens (HP 110 is `hp := 11`; 50 damage i
 | Trainer, with caveats | 45 | 3 |
 | Special Energy | 9 | 1 |
 
-With no error found in 20 cards, the 95% upper bound on the error rate of the sampled strata is about 14% (1 − 0.05^(1/20)); the sample is stratified, not proportional, so this is indicative only.
+The sample is stratified, not proportional, and leaves out the 9 Basic Energy cards, so no error found in 20 gives no useful bound on the pool's error rate (the worst case consistent with it at 95% is about 26%).
 
 ---
 

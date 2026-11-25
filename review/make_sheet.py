@@ -81,6 +81,6 @@ for name, k, pred in strata:
             o.append("- `%s` (%s): %s" % (x, d, " ".join(str(TR.CAVEATS.get(x, "?")).split())))
         o += ["", "### Verdict", "", "- [ ] Right   - [ ] Wrong   - [ ] Mislabelled", "", "Notes:", ""]
         out += o
-head += ["", "With no error found in 20 cards, the 95% upper bound on the error rate of the sampled strata is about 14% (1 − 0.05^(1/20)); the sample is stratified, not proportional, so this is indicative only."]
+head += ["", "The sample is stratified, not proportional, and leaves out the 9 Basic Energy cards, so no error found in 20 gives no useful bound on the pool's error rate (the worst case consistent with it at 95% is about 26%)."]
 open("sheet.md", "w").write("\n".join(head + out) + "\n")
 print(n, "cards;", len("\n".join(out).splitlines()), "lines")

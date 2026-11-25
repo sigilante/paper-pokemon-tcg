@@ -121,7 +121,7 @@ no recycling loop within a turn.
 \keywords{trading card games, Turing completeness, counter machines, finite-state abstraction, formalization, Lean}
 \maketitle
 
-\noindent{\small\copyright{} 2026 N.~E.~Davis (Sigilante). The author's own text, tables and figures are licensed under the Creative Commons Attribution 4.0 International licence (CC~BY~4.0), \url{https://creativecommons.org/licenses/by/4.0/}.
+\noindent{\small\copyright{} 2026 N.~E.~Davis (Sigilante). The author's own text, tables and figures are licensed under the Creative Commons Attribution 4.0 International licence (CC~BY~4.0), \mbox{\url{https://creativecommons.org/licenses/by/4.0/}}.
 The Lean model, the importer, the surveys and this manuscript were written by large language model
 agents directed by the author (``Provenance and use of AI'', Section~\ref{sec:provenance}).
 \pkmn{}, the \pkmn{} Trading Card Game, card names and quoted card and rulebook text belong to
@@ -1108,7 +1108,7 @@ when the action can be done. Where public information decides that a Trainer or 
 can do nothing, the term makes it unplayable there (the reading of Section~\ref{sec:departures}).
 
 \paragraph{Who read the translations.} LLM agents run by the author compared the
-translations with the printed records, and the author read a sample of 20 (below): in each of the importer's fourteen rounds (versions, each
+translations with the printed records, and the author read a sample of 20 (below). In each of the importer's fourteen rounds (versions, each
 adding a family of card text) its own agent, and in twelve a second agent, read the new cards or a
 sample (Appendix~\ref{app:readers}).
 
@@ -1244,8 +1244,8 @@ recyclers, and the evidence for each count.
 \paragraph{Scope.} Lean proves, about the generated terms, that every game built only from them meets
 the five clauses of \lean{StoreSafe} and so has a finite exact-store quotient. Three links lie outside
 Lean. The first is the reading: no Lean statement ties a term to its card. A further LLM agent, run by
-the author as a hostile referee, read 70 cards of earlier importer versions and found no error; the
-30 cards with effect text give a 95\% upper bound on the error rate of about 10\%. The author read 20 of the 1,492 cards at the cited commit, drawn at random within six strata by kind and status (\texttt{review/} in the paper's repository holds the sheet and its script), and judged all 20 right apart from their listed caveats; none found in 20 bounds the error rate by about 14\% at 95\%, indicatively, since the strata are not proportional. The second is the partition of the pool into the
+the author as a hostile referee, read 70 cards of earlier importer versions and found no error, with one near miss in the order of a discard and the damage; the
+30 cards with effect text give a 95\% upper bound on the error rate of about 10\%. The author read 20 of the 1,483 imported cards other than Basic Energy at the cited commit, drawn at random within six strata by kind and status (\texttt{review/} in the paper's repository holds the sheet and its script), and judged all 20 right apart from their listed caveats. The sample is stratified, not proportional, and gives no useful bound on the pool's error rate (the worst case consistent with it at 95\% is about 26\%). The second is the partition of the pool into the
 imported and refused lists, established by the importer and an external script. The third is clause 3
 for the whole Standard pool: the two Standard Items that write, Iron Defender and Premium Power Pro,
 are refused for their type-restricted modifiers, and Lean proves the five clauses for the imported
@@ -1650,7 +1650,7 @@ Zone, Prize-card moves other than taking them.
 Tool-given Abilities (forbids some; the store bound is not proved for a flag per Ability). Evolution
 clears the flag, so an evolution line whose two cards print the same once-per-turn Ability can use
 it twice in a turn (allows more; no ruling checked). ``This \pkmn{}'' on the Bench is a chosen
-Benched \pkmn{} (allows more), not followed after a mid-effect Knock Out (forbids some). An on-play Ability is offered only if the play leaves no
+Benched \pkmn{} (allows more), not followed after a mid-effect Knock Out (both). An on-play Ability is offered only if the play leaves no
 Knock Out pending. ``You can't use more than 1 X Ability each turn'' is not modelled (allows
 more). Per-\pkmn{} bonuses are the player's. A Stadium, Tool or Special Energy card whose text is
 not expressed is inert. Absent: Ability and Tool locks, the end-of-turn discard of Technical Machines,

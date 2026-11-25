@@ -26,4 +26,4 @@ card and rulebook text belong to their owners (Nintendo, Creatures Inc., GAME FR
 Pokémon Company); they are quoted for research and commentary and are not licensed by the author.
 This work is not affiliated with, sponsored or endorsed by them. See `NOTICE`.
 
-Human-read sample: `review/human-sample-2026-11-26.md` is the sheet of 20 imported cards (printed text beside the Lean term, drawn by `review/make_sheet.py` with a fixed seed at lean-pokemon 05a38b3) with the author's verdicts: all 20 right apart from their listed caveats.
+Human-read sample: `review/human-sample-2026-11-26.md` is the sheet of 20 imported cards (printed text beside the Lean term, drawn by `review/make_sheet.py` with a fixed seed at lean-pokemon 05a38b3) with the author's verdicts: all 20 right apart from their listed caveats. Reproducing the draw needs a lean-pokemon checkout at 05a38b3 and the pokemon-tcg-data snapshot the importer used; the script's paths are the author's and must be edited. (An independent re-run at 05a38b3 drew the same 20 cards.) The bound line at the top of the sheet was corrected after the reading; the verdicts are unchanged.
