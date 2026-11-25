@@ -12,12 +12,12 @@ were produced with large language model agents directed by the author, as the pa
 "Provenance and use of AI" paragraph states. The draft has been reviewed only by such agents, not
 by human referees. Some bibliography entries are marked unverified in `refs.bib`. The
 machine-checked results it describes live in
-[sigilante/lean-pokemon](https://github.com/sigilante/lean-pokemon) (audited commit ec12a27);
+[sigilante/lean-pokemon](https://github.com/sigilante/lean-pokemon) (audited commit 05a38b3);
 where the paper and the Lean source disagree, the Lean source is authoritative.
 
 Build: `latexmk -pdf mss.tex`. A compiled `mss.pdf` is kept in the repository and rebuilt with each change to the source.
 
-Listing check: `python3 tools/listing_check.py PATH/TO/lean-pokemon` (a checkout at the cited commit, ec12a27) compares every Lean declaration displayed in `mss.tex` with the source, as whole declarations.
+Listing check: `python3 tools/listing_check.py PATH/TO/lean-pokemon` (a checkout at the cited commit, 05a38b3) compares every Lean declaration displayed in `mss.tex` with the source, as whole declarations.
 It uses the Python standard library only and exits non-zero if any displayed declaration or card term does not match.
 
 Licence: the paper (text, figures and bibliography) is © 2026 N. E. Davis (Sigilante), released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); see `LICENSE`.
