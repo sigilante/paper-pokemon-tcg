@@ -114,8 +114,8 @@ a halt marker is reachable by some sequence of legal moves if and only if the ma
 Minsky's theorem (cited, not formalised) reachability is undecidable. An importer translates
 1,492 of 2,161 cards (regulation marks H, I, J; Basic Energy). Games of these cards alone meet
 the five conditions: four because nothing they constrain occurs (no looped or rest-of-game
-write, no Item that writes); the other admits one once-per-turn Ability that writes. No human has
-checked the translations. We conjecture that the printed game is not Turing complete for decks with
+write, no Item that writes); the other admits one once-per-turn Ability that writes. The author read 20 of
+the translations and found no error; no human has read the rest. We conjecture that the printed game is not Turing complete for decks with
 no recycling loop within a turn.
 \end{abstract}
 
@@ -217,7 +217,7 @@ there because nothing they constrain occurs: no imported term writes a stored am
 \lean{iter} or into the rest-of-game slot, and no imported Item writes, so no recycler can return a
 card that clause 3 constrains. Only clause 4 meets a card it constrains, Feraligatr's
 once-per-turn Ability that writes a bonus, and admits it. The theorem covers the cards as translated. No Lean statement ties a term to its card; LLM agents run
-by the author compared the terms with the printed text, and no human has (Section~\ref{sec:importer}).
+by the author compared the terms with the printed text; the author read a sample of 20 (Section~\ref{sec:importer}).
 
 \paragraph{The printed game (surveyed; open).} A survey of 20,776 English card records found no
 unbounded store that persists across turns and that card text reads beyond a yes-or-no test; the
@@ -1105,8 +1105,8 @@ that says its effect ``doesn't stack'' is refused, since the model adds every ef
 when the action can be done. Where public information decides that a Trainer or an activated Ability
 can do nothing, the term makes it unplayable there (the reading of Section~\ref{sec:departures}).
 
-\paragraph{Who read the translations.} LLM agents run by the author, and no human, compared the
-translations with the printed records: in each of the importer's fourteen rounds (versions, each
+\paragraph{Who read the translations.} LLM agents run by the author compared the
+translations with the printed records, and the author read a sample of 20 (below): in each of the importer's fourteen rounds (versions, each
 adding a family of card text) its own agent, and in twelve a second agent, read the new cards or a
 sample (Appendix~\ref{app:readers}).
 
@@ -1194,7 +1194,7 @@ whichever \pkmn{} attacks this turn gets it. On the Bench ``this \pkmn{}'' is an
 and a Knock Out check falls between the two steps.
 \caption{Three imported cards: the printed text shown, the generated term at \texttt{05a38b3}
 (verbatim; HP and damage in damage counters), a gloss, and the status. An LLM agent chose the
-three and read each term against the printed text and the model's semantics; no human has.}\label{fig:cards}
+three and read each term against the printed text and the model's semantics; none is in the author's sample.}\label{fig:cards}
 \end{figure}
 
 \paragraph{Numbers.} Table~\ref{tab:import} (Appendix~\ref{app:import}) gives the counts by kind of card; in all, 1,492 cards are imported (69.0\%), 1,052
@@ -1243,7 +1243,7 @@ recyclers, and the evidence for each count.
 the five clauses of \lean{StoreSafe} and so has a finite exact-store quotient. Three links lie outside
 Lean. The first is the reading: no Lean statement ties a term to its card. A further LLM agent, run by
 the author as a hostile referee, read 70 cards of earlier importer versions and found no error; the
-30 cards with effect text give a 95\% upper bound on the error rate of about 10\%. The second is the partition of the pool into the
+30 cards with effect text give a 95\% upper bound on the error rate of about 10\%. The author read 20 of the 1,492 cards at the cited commit, drawn at random within six strata by kind and status (\texttt{review/} in the paper's repository holds the sheet and its script), and judged all 20 right apart from their listed caveats; none found in 20 bounds the error rate by about 14\% at 95\%, indicatively, since the strata are not proportional. The second is the partition of the pool into the
 imported and refused lists, established by the importer and an external script. The third is clause 3
 for the whole Standard pool: the two Standard Items that write, Iron Defender and Premium Power Pro,
 are refused for their type-restricted modifiers, and Lean proves the five clauses for the imported
@@ -1468,7 +1468,7 @@ undecidable.
 Standard pool meets the five clauses of \lean{StoreSafe} (machine-checked). Four hold because
 nothing they constrain occurs among these cards (no write under \lean{iter}, no rest-of-game write,
 no Item that writes); clause 4 admits the one card it constrains, Feraligatr's once-per-turn Ability
-that writes. No proof ties a term to its card; LLM agents, and no human, compared them. The other 669
+that writes. No proof ties a term to its card; LLM agents compared them, and the author read 20. The other 669
 Standard cards and all cards outside Standard are open.
 
 \paragraph{Conjectures.} We conjecture that the printed \pkmn{} TCG is not Turing complete for
@@ -1483,8 +1483,8 @@ the importer, is public \cite{lean-pokemon}; the survey files and census scripts
 surveys and this manuscript were written by large language model agents (Anthropic's Claude models)
 directed by the author, who set the questions and the scope and made the decisions. Further runs
 of such agents with reviewer prompts (called ``Wizard'', ``Grammarian'' and similar in the project),
-not human referees, reviewed the Lean development and this manuscript adversarially. No human has
-read the card translations against the printed cards. The proofs are checked by the Lean kernel,
+not human referees, reviewed the Lean development and this manuscript adversarially. The author has
+read 20 of the 1,492 card translations against the printed cards, and no human has read the others. The proofs are checked by the Lean kernel,
 which is the only verification independent of this process.
 
 \bibliographystyle{plain}
@@ -1896,7 +1896,7 @@ rewritten card in five rounds (22, 67, 41, 84, 62) and in the last three (153, 1
 caveats of earlier cards in the last); 74 of 87 in the round of importer-only rules; and 9 new cards
 and 30 of 35 changed terms when Basic and Special Energy filters were split. Static text (31 cards)
 and the first triggers (16) had only the importer's agent; the trigger cards were read by a second
-agent in the next round, the static cards never. No human has read the translations.
+agent in the next round, the static cards never. The author read a sample of 20 at the cited commit (Section~\ref{sec:importer}).
 
 %======================================================================
 \section{Further definitions and lemmas}\label{app:defs}
@@ -2220,7 +2220,7 @@ theorem storeSafe_withOverItems (g : GameState)
 \emph{Machine-checked}: a Lean theorem of the audited commit that passes the audit of
 Section~\ref{sec:pe-checks}. \emph{By definition}: true of the model's definitions. \emph{Argued}: a
 proof by hand. \emph{Surveyed}: found by a systematic but non-exhaustive search. \emph{Read}:
-LLM agents run by the author compared translations with the printed text, and no human did; \emph{not verified}: no proof ties
+LLM agents run by the author compared translations with the printed text, and the author read a sample of 20; \emph{not verified}: no proof ties
 them. \emph{Assumption}: adopted without evidence. \emph{Checked outside Lean}: by the importer and
 a script. \emph{False}: the negation is machine-checked. \emph{Not proved}: supported by the cited
 evidence, without proof. \emph{Conjectured}: no proof is offered. \emph{Open}: we take no side. A
@@ -2335,8 +2335,8 @@ the second and the fourth.
 \section{Future work}\label{app:future}
 %======================================================================
 
-Open work: the constructs of Table~\ref{tab:blockers}; a human-read stratified sample of the
-translations with an error bound; a search for tests on Poison strength; a tight HP bound
+Open work: the constructs of Table~\ref{tab:blockers}; a larger human-read sample of the
+translations (20 are read); a search for tests on Poison strength; a tight HP bound
 (\lean{hpOf\_le\_120} gives 726,038); the conjecture of Section~\ref{sec:finite-scope}; and
 quantitative questions (does the first player win with probability above $p$?), which finiteness does
 not settle: the threshold problem for probabilistic finite automata is undecidable

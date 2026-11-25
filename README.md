@@ -25,3 +25,5 @@ The licence covers the author's own text, tables and figures only. Pokémon, car
 card and rulebook text belong to their owners (Nintendo, Creatures Inc., GAME FREAK inc. and The
 Pokémon Company); they are quoted for research and commentary and are not licensed by the author.
 This work is not affiliated with, sponsored or endorsed by them. See `NOTICE`.
+
+Human-read sample: `review/human-sample-2026-11-26.md` is the sheet of 20 imported cards (printed text beside the Lean term, drawn by `review/make_sheet.py` with a fixed seed at lean-pokemon 05a38b3) with the author's verdicts: all 20 right apart from their listed caveats.
